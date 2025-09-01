@@ -1,0 +1,357 @@
+/* Disclaimer Page Styles */
+.disclaimer-page {
+  min-height: 100vh;
+  background: #ffffff;
+}
+
+.disclaimer-main {
+  padding-top: 80px; /* Account for fixed header */
+}
+
+/* Hero Section */
+.disclaimer-hero {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 25%, #b91c1c 75%, #991b1b 100%);
+  color: white;
+  padding: 80px 0;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.disclaimer-hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(239, 68, 68, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(220, 38, 38, 0.3) 0%, transparent 50%);
+  z-index: 1;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.hero-icon {
+  font-size: 4rem;
+  margin-bottom: 20px;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.disclaimer-hero h1 {
+  font-size: 3rem;
+  font-weight: 900;
+  margin-bottom: 20px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.disclaimer-hero p {
+  font-size: 1.2rem;
+  opacity: 0.95;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Container */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Content Section */
+.disclaimer-content {
+  padding: 80px 0;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%);
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 30px;
+  margin-bottom: 60px;
+}
+
+/* Disclaimer Cards */
+.disclaimer-card {
+  background: white;
+  border-radius: 16px;
+  padding: 40px 30px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.disclaimer-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #ef4444, #dc2626, #b91c1c);
+}
+
+.disclaimer-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+}
+
+.card-icon {
+  font-size: 3rem;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.disclaimer-card h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.card-content p {
+  color: #4b5563;
+  line-height: 1.7;
+  margin-bottom: 20px;
+  font-size: 1rem;
+}
+
+.card-content ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.card-content li {
+  color: #6b7280;
+  line-height: 1.6;
+  margin-bottom: 12px;
+  padding-left: 25px;
+  position: relative;
+  font-size: 0.95rem;
+}
+
+.card-content li::before {
+  content: '•';
+  color: #ef4444;
+  font-weight: bold;
+  position: absolute;
+  left: 0;
+  font-size: 1.2rem;
+}
+
+.card-content strong {
+  color: #1f2937;
+  font-weight: 600;
+}
+
+/* Important Notice */
+.important-notice {
+  background: linear-gradient(135deg, #fef2f2, #fee2e2);
+  border: 2px solid #fecaca;
+  border-radius: 16px;
+  padding: 40px;
+  margin-bottom: 60px;
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.notice-icon {
+  font-size: 2.5rem;
+  flex-shrink: 0;
+  animation: blink 2s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.notice-content h3 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #dc2626;
+  margin-bottom: 15px;
+}
+
+.notice-content p {
+  color: #7f1d1d;
+  line-height: 1.7;
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* Disclaimer Footer */
+.disclaimer-footer {
+  text-align: center;
+  padding: 40px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
+}
+
+.disclaimer-footer h3 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 15px;
+}
+
+.disclaimer-footer p {
+  color: #6b7280;
+  line-height: 1.6;
+  margin-bottom: 15px;
+}
+
+.disclaimer-footer a {
+  color: #ef4444;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+.disclaimer-footer a:hover {
+  color: #dc2626;
+  text-decoration: underline;
+}
+
+.last-updated {
+  font-size: 0.9rem;
+  color: #9ca3af;
+  font-style: italic;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .disclaimer-hero h1 {
+    font-size: 2.2rem;
+  }
+  
+  .disclaimer-hero p {
+    font-size: 1rem;
+  }
+  
+  .hero-icon {
+    font-size: 3rem;
+  }
+  
+  .content-grid {
+    grid-template-columns: 1fr;
+    gap: 25px;
+  }
+  
+  .disclaimer-card {
+    padding: 30px 25px;
+  }
+  
+  .card-icon {
+    font-size: 2.5rem;
+  }
+  
+  .disclaimer-card h2 {
+    font-size: 1.3rem;
+  }
+  
+  .important-notice {
+    flex-direction: column;
+    text-align: center;
+    padding: 30px 25px;
+  }
+  
+  .notice-icon {
+    font-size: 2rem;
+  }
+  
+  .disclaimer-footer {
+    padding: 30px 25px;
+  }
+}
+
+@media (max-width: 480px) {
+  .disclaimer-hero {
+    padding: 60px 0;
+  }
+  
+  .disclaimer-hero h1 {
+    font-size: 1.8rem;
+  }
+  
+  .disclaimer-content {
+    padding: 60px 0;
+  }
+  
+  .container {
+    padding: 0 15px;
+  }
+  
+  .disclaimer-card {
+    padding: 25px 20px;
+  }
+  
+  .card-content p,
+  .card-content li {
+    font-size: 0.9rem;
+  }
+  
+  .important-notice {
+    padding: 25px 20px;
+  }
+  
+  .disclaimer-footer {
+    padding: 25px 20px;
+  }
+  
+  .disclaimer-footer h3 {
+    font-size: 1.1rem;
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .hero-icon,
+  .notice-icon {
+    animation: none;
+  }
+  
+  .disclaimer-card {
+    transition: none;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .disclaimer-hero {
+    background: none;
+    color: black;
+  }
+  
+  .disclaimer-card {
+    box-shadow: none;
+    border: 1px solid #ccc;
+    break-inside: avoid;
+  }
+  
+  .important-notice {
+    background: none;
+    border: 2px solid #ccc;
+  }
+}

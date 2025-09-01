@@ -1,0 +1,112 @@
+/* VoiceSearchButton Component Styles */
+.voice-search-btn {
+  position: absolute;
+  right: 45px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(8, 145, 178, 0.08);
+  color: var(--medical-blue);
+  border: 1px solid rgba(8, 145, 178, 0.2);
+  padding: 0.4rem;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 3;
+  min-width: 28px;
+  min-height: 28px;
+}
+
+.voice-search-btn:hover {
+  background: rgba(8, 145, 178, 0.15);
+  border-color: rgba(8, 145, 178, 0.4);
+  transform: translateY(-50%) scale(1.05);
+}
+
+.voice-search-btn.recording {
+  background: #ef4444;
+  color: white;
+  animation: pulse 1.5s infinite;
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.6);
+}
+
+.voice-search-btn.recording::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  border: 2px solid #ef4444;
+  border-radius: 50%;
+  animation: ripple 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: translateY(-50%) scale(1); }
+  50% { transform: translateY(-50%) scale(1.1); }
+  100% { transform: translateY(-50%) scale(1); }
+}
+
+@keyframes ripple {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2);
+    opacity: 0;
+  }
+}
+
+.voice-search-btn svg {
+  width: 16px;
+  height: 16px;
+  transition: all 0.2s ease;
+}
+
+.voice-search-btn:hover svg {
+  transform: scale(1.1);
+}
+
+/* Hero Voice Button Specific Styles */
+.hero-voice-btn {
+  right: 55px;
+  padding: 0.5rem;
+  min-width: 32px;
+  min-height: 32px;
+}
+
+.hero-voice-btn.recording {
+  animation: hero-pulse 1.5s infinite;
+}
+
+.hero-voice-btn.recording::before {
+  animation: hero-ripple 1.5s infinite;
+}
+
+.hero-voice-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+@keyframes hero-pulse {
+  0% { transform: translateY(-50%) scale(1); }
+  50% { transform: translateY(-50%) scale(1.1); }
+  100% { transform: translateY(-50%) scale(1); }
+}
+
+@keyframes hero-ripple {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2);
+    opacity: 0;
+  }
+}

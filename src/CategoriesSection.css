@@ -1,0 +1,115 @@
+/* CategoriesSection Component Styles */
+.categories-section {
+  background: var(--white-color);
+  padding: 2rem 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.categories-section .section-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+
+
+.section-title {
+  font-size: 1.8rem;
+  color: var(--dark-text);
+  margin-bottom: 0;
+}
+
+.category-shortcuts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.category-item {
+  text-align: center;
+  padding: 1rem;
+  border-radius: 15px;
+  background: var(--white-color);
+  box-shadow: none;
+  border: 1px solid transparent;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.category-item:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+  border-color: #e5e7eb;
+}
+
+.category-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.category-img {
+  width: 150px;
+  height: 100px;
+}
+
+.category-name {
+  font-weight: 600;
+  color: var(--dark-text);
+  margin-bottom: 0.3rem;
+  font-size: 0.9rem;
+}
+
+.category-offer {
+  font-size: 0.75rem;
+  color: var(--accent-color);
+  font-weight: bold;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .category-shortcuts {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+  }
+
+  .category-item {
+    padding: 0.8rem;
+  }
+
+  .category-icon {
+    font-size: 2rem;
+  }
+
+  .category-name {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .category-shortcuts {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .category-icon {
+    font-size: 1.8rem;
+  }
+
+  .category-name {
+    font-size: 0.75rem;
+  }
+
+  .category-offer {
+    font-size: 0.7rem;
+  }
+}
+
+/* Disease Item Specific Styles */
+.disease-item:hover {
+  border-color: #0891b2;
+  background: #f0f9ff;
+}
+
+

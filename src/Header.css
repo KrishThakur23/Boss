@@ -1,0 +1,613 @@
+/* Header Component Styles */
+.header {
+  background: var(--white-color);
+  color: var(--dark-text);
+  padding: 1rem 0;
+  position: fixed;
+  width: 100%;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  transition: all 0.3s ease;
+}
+
+.header.sticky {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+}
+
+.header-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 1rem;
+  gap: 1rem;
+}
+
+.logo-section { 
+  display: flex; 
+  align-items: center; 
+  gap: 1rem; 
+  flex-shrink: 0;
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+
+
+.location-container {
+  color: var(--dark-text);
+  font-size: 0.9rem;
+}
+
+.location-change-btn {
+  background: none;
+  border: none;
+  color: var(--medical-blue);
+  font-weight: bold;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+  font-size: inherit;
+  margin-left: 0.5rem;
+}
+
+.user-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1rem;
+  flex: 1;
+  margin: 0 2rem;
+}
+
+/* Header Search Bar */
+.header-search-container {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px) scale(0.98); 
+  position: relative;
+  flex-grow: 1;
+  max-width: 500px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  pointer-events: none;
+}
+
+.header.search-active .header-search-container {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+  pointer-events: all;
+}
+
+.header.search-active .header-search-container:focus-within {
+  background: var(--white-color);
+  border-color: var(--medical-blue);
+  box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.1);
+}
+
+.header-search-bar {
+  width: 100%;
+  padding: 0.6rem 5rem 0.6rem 1rem;
+  font-size: 0.9rem;
+  outline: none;
+  color: var(--dark-text);
+  background: transparent;
+  border: none;
+  position: relative;
+  z-index: 2;
+}
+
+.custom-placeholder {
+  position: absolute;
+  top: 50%;
+  left: 1.5rem;
+  transform: translateY(-50%);
+  z-index: 1;
+  color: #757575;
+  font-size: 1.1rem;
+  pointer-events: none;
+  display: flex;
+  align-items: baseline;
+}
+
+.header-placeholder {
+  font-size: 0.9rem;
+  left: 1rem;
+}
+
+.dynamic-text-wrapper {
+  height: 1.2em;
+  overflow: hidden;
+  display: inline-block;
+  vertical-align: baseline;
+}
+
+.dynamic-text {
+  display: inline-block;
+  transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  transform: translateY(0);
+}
+
+.dynamic-text.exit {
+  transform: translateY(-110%);
+}
+
+/* Search Icons Container */
+.search-icons {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  z-index: 3;
+}
+
+.header-search-btn {
+  background: transparent;
+  color: var(--medical-blue);
+  border: none;
+  padding: 0.4rem;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  position: static;
+  transform: none;
+}
+
+.header-search-btn:hover {
+  background: rgba(8, 145, 178, 0.1);
+  transform: scale(1.1);
+}
+
+/* Override VoiceSearchButton styles when inside search container */
+.search-icons .voice-search-btn {
+  position: static !important;
+  transform: none !important;
+  background: rgba(8, 145, 178, 0.08);
+  color: var(--medical-blue);
+  border: 1px solid rgba(8, 145, 178, 0.2);
+  padding: 0.4rem;
+  border-radius: 50%;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  min-width: 28px;
+  min-height: 28px;
+  right: auto;
+  top: auto;
+}
+
+.search-icons .voice-search-btn:hover {
+  background: rgba(8, 145, 178, 0.15);
+  border-color: rgba(8, 145, 178, 0.4);
+  transform: scale(1.05) !important;
+}
+
+.search-icons .voice-search-btn.recording {
+  background: #ef4444;
+  color: white;
+  animation: pulse-inline 1.5s infinite;
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.6);
+}
+
+.search-icons .voice-search-btn.recording::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  border: 2px solid #ef4444;
+  border-radius: 50%;
+  animation: ripple-inline 1.5s infinite;
+}
+
+@keyframes pulse-inline {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+@keyframes ripple-inline {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2);
+    opacity: 0;
+  }
+}
+
+/* Header Buttons */
+.btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.btn-text {
+  font-weight: 500;
+  letter-spacing: 0.025em;
+  color: inherit;
+  display: inline-block;
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Specific button styles */
+.btn-login {
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+}
+
+.btn-login:hover {
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+}
+
+/* Add these styles at the end of your existing Header.css */
+
+.user-section {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* ========== Base Header Button (all buttons) ========== */
+.header-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--white-color);
+  color: var(--dark-text);
+  border: 1px solid #e5e7eb;
+  padding: 0.7rem 1.2rem;
+  border-radius: 25px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  white-space: nowrap;
+  position: relative;
+  overflow: hidden;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+/* Default hover for plain buttons (blue accent) */
+.header-btn:hover { 
+  background: #f8fafc;
+  color: var(--medical-blue);
+  border-color: var(--medical-blue);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(8, 145, 178, 0.15);
+}
+
+.header-btn:hover .btn-icon {
+  transform: scale(1.1);
+}
+
+/* ========== Donate Button (pink) ========== */
+.header-btn.btn-donate {
+  border: 2px solid #fbcfe8;
+  background: linear-gradient(135deg, #fff0f7 0%, #ffffff 100%);
+  color: #9d174d;
+}
+
+.header-btn.btn-donate:hover {
+  background: linear-gradient(135deg, #fbcfe8 0%, #f9a8d4 100%);
+  border-color: #f472b6;
+  color: #9d174d;
+  box-shadow: 0 4px 12px rgba(244, 114, 182, 0.15);
+}
+
+/* ========== Cart Button (blue) ========== */
+.header-btn.btn-cart {
+  border: 2px solid var(--medical-blue);
+  background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%);
+  color: var(--medical-blue);
+}
+
+.header-btn.btn-cart:hover {
+  background: var(--medical-blue);
+  color: #ffffff;
+  border-color: var(--medical-blue);
+  box-shadow: 0 4px 12px rgba(8, 145, 178, 0.2);
+}
+
+/* ========== User Button (silver) ========== */
+.header-btn.btn-user {
+  border: 2px solid #d1d5db; /* gray-300 */
+  background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%); /* subtle silver tint */
+  color: #374151; /* gray-700 */
+}
+
+.header-btn.btn-user:hover {
+  background: linear-gradient(135deg, #e5e7eb 0%, #f3f4f6 100%); /* slightly darker silver */
+  border-color: #9ca3af; /* gray-400 */
+  color: #111827; /* gray-900 */
+  box-shadow: 0 4px 12px rgba(156, 163, 175, 0.25); /* gray shadow */
+  transform: translateY(-1px);
+}
+
+.header-btn.btn-user:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(156, 163, 175, 0.4); /* gray ring */
+  border-color: #6b7280;
+}
+
+/* removed inline signout button in header; now in dropdown */
+
+.user-dropdown {
+  position: absolute;
+  right: 0;
+  top: 110%;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  border-radius: 10px;
+  padding: 6px;
+  min-width: 160px;
+  z-index: 1500;
+  opacity: 0;
+  transform: translateY(-10px);
+  animation: dropdownFadeIn 0.2s ease forwards;
+}
+
+@keyframes dropdownFadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.user-dropdown-item {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #111827;
+  font-weight: 500;
+  text-decoration: none;
+  display: block;
+}
+
+.user-dropdown-item:hover {
+  background: #f3f4f6;
+}
+
+/* emergency-signout-btn removed */
+
+.mobile-signout-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 8px;
+  width: 100%;
+}
+
+.mobile-signout-btn:hover {
+  background: #dc2626;
+}
+
+/* Mobile Navigation */
+.mobile-nav-toggle {
+  display: none;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  z-index: 2000;
+  padding: 10px;
+}
+
+.hamburger-icon,
+.hamburger-icon::before,
+.hamburger-icon::after {
+  content: '';
+  display: block;
+  width: 25px;
+  height: 3px;
+  background-color: var(--dark-text);
+  border-radius: 3px;
+  transition: all 0.3s ease-in-out;
+}
+
+.hamburger-icon::before { transform: translateY(-8px); }
+.hamburger-icon::after { transform: translateY(8px); }
+
+.mobile-nav-toggle[aria-expanded="true"] .hamburger-icon {
+  background-color: transparent;
+}
+.mobile-nav-toggle[aria-expanded="true"] .hamburger-icon::before {
+  transform: translateY(0) rotate(45deg);
+}
+.mobile-nav-toggle[aria-expanded="true"] .hamburger-icon::after {
+  transform: translateY(-3px) rotate(-45deg);
+}
+
+.mobile-nav {
+  display: none;
+}
+
+.mobile-nav-link {
+  color: var(--dark-text);
+  text-decoration: none;
+  font-size: 1.3rem;
+  font-weight: 600;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.3s ease 0.2s, transform 0.3s ease 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.mobile-nav-link svg {
+  flex-shrink: 0;
+  color: var(--medical-blue);
+}
+
+.mobile-nav.is-active .mobile-nav-link {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .header-container {
+    padding: 1rem;
+  }
+
+
+
+  .user-actions {
+    display: none;
+  }
+  
+  .mobile-nav-toggle {
+    display: block;
+  }
+  
+  .mobile-nav {
+    position: fixed;
+    top: 73px;
+    left: 0;
+    width: 100%;
+    height: calc(100vh - 73px);
+    background: var(--white-color);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transform: translateX(100%);
+    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 3rem 0;
+    gap: 2rem;
+    z-index: 1999;
+  }
+  
+  .mobile-nav.is-active {
+    transform: translateX(0);
+  }
+
+  .header.search-active .header-search-container {
+    display: none;
+  }
+}
+
+/* Emoji icon styles */
+.btn-icon, .mobile-icon {
+  font-size: 18px;
+  line-height: 1;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+.mobile-icon {
+  font-size: 20px;
+  margin-right: 10px;
+}
+
+.user-profile-area {
+  cursor: pointer;
+  position: relative;
+}
+
+.mobile-user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.mobile-user-info .mobile-nav-link {
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: none;
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Cart Badge Styles */
+.cart-icon-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.cart-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #ef4444;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.mobile-cart-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.mobile-cart-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #ef4444;
+  color: white;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  border: 2px solid white;
+}

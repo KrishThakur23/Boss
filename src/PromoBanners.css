@@ -1,0 +1,133 @@
+/* PromoBanners Component Styles */
+.promo-banners {
+  padding: 3rem 0;
+  background: #f8fafc;
+}
+
+.banner-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 350px));
+  gap: 2rem;
+  justify-content: center;
+}
+
+.promo-banner {
+  background: var(--white-color);
+  border-radius: 15px;
+  padding: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.promo-banner:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+.lab-test-banner {
+  background: linear-gradient(135deg, #1e3a8a 0%, #0891b2 100%);
+  color: var(--white-color);
+}
+
+.sunscreen-banner {
+  background: linear-gradient(135deg, #0f766e 0%, #10b981 100%);
+  color: var(--white-color);
+}
+
+.supplement-banner {
+  background: linear-gradient(135deg, #ea580c 0%, #f97316 100%);
+  color: var(--white-color);
+}
+
+.banner-content {
+  flex: 1;
+}
+
+.banner-content h3 {
+  font-size: 1.3rem;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+}
+
+.banner-content p {
+  font-size: 0.9rem;
+  margin-bottom: 0.8rem;
+  opacity: 0.9;
+}
+
+.banner-offer {
+  font-size: 0.8rem;
+  margin-bottom: 1rem;
+  opacity: 0.8;
+}
+
+.banner-btn {
+  background: var(--white-color);
+  color: var(--dark-text);
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.banner-btn:hover {
+  transform: scale(1.05) translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.whatsapp-btn {
+  background: #25d366;
+  color: var(--white-color);
+}
+
+.banner-image {
+  font-size: 3rem;
+  margin-left: 1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .banner-grid {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 320px));
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .banner-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+
+  .promo-banner {
+    flex-direction: column;
+    text-align: center;
+    padding: 1.5rem;
+  }
+
+  .banner-image {
+    margin: 1rem 0 0 0;
+    font-size: 2.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .banner-grid {
+    max-width: 100%;
+    padding: 0 1rem;
+  }
+  
+  .promo-banner {
+    padding: 1.2rem;
+  }
+}

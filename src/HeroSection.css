@@ -1,0 +1,119 @@
+/* HeroSection Component Styles */
+.hero-section {
+  background: var(--white-color);
+  padding: 1.25rem 0;
+  text-align: center;
+  color: var(--dark-text);
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.hero-content h1 {
+  font-size: 1.25rem;
+  margin-bottom: 0.4rem;
+  font-weight: 700;
+}
+
+.hero-content p {
+  font-size: 0.95rem;
+  margin-bottom: 0.9rem;
+  opacity: 0.9;
+}
+
+.hero-search-container {
+  position: relative;
+  max-width: 520px;
+  margin: 0 auto 0.6rem;
+  transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  background: var(--white-color);
+  border-radius: 25px;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.3s ease, border-color 0.3s ease, opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1), visibility 0.4s cubic-bezier(0.25, 1, 0.5, 1), transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.hero-search-container:focus-within {
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.12);
+  border-color: var(--medical-blue);
+}
+
+.header.search-active + .main-content .hero-section .hero-search-container {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-20px) scale(0.95);
+  pointer-events: none;
+}
+
+.hero-search-bar {
+  width: 100%;
+  padding: 1rem 5rem 1rem 1.5rem;
+  font-size: 1.1rem;
+  outline: none;
+  color: var(--dark-text);
+  background: transparent;
+  border: none;
+  position: relative;
+  z-index: 2;
+}
+
+.hero-search-btn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--medical-blue); 
+  color: var(--white-color);
+  border: none;
+  padding: 0.5rem;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: background 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+}
+
+.hero-search-btn:hover {
+  background: var(--secondary-color);
+}
+
+.hero-prescription {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  font-size: 0.9rem;
+  transition: opacity 0.3s;
+  margin-top: 0.5rem;
+  max-width: 520px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-right: 1rem;
+}
+
+.hero-upload-link {
+  color: var(--medical-blue);
+  text-decoration: none;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--medical-blue);
+  border-radius: 20px;
+  transition: all 0.3s ease;
+} 
+
+.hero-upload-link:hover {
+  background: var(--medical-blue);
+  color: var(--white-color);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .hero-content h1 { font-size: 1.1rem; }
+  .hero-content p { font-size: 0.9rem; margin-bottom: 0.7rem; }
+}
+
+@media (max-width: 480px) {
+  .hero-content h1 { font-size: 1rem; }
+  .hero-search-bar { font-size: 0.95rem; padding: 0.75rem 2.3rem 0.75rem 1rem; }
+}
