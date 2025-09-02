@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ProductService from './services/productService';
 import { useCart } from './contexts/CartContext';
 import { useAuth } from './contexts/AuthContext';
+import { LoadingSpinner } from './components/LoadingComponents';
 import './ProductSections.css';
 
 const ProductSections = () => {
@@ -10,7 +11,8 @@ const ProductSections = () => {
   const [productSections, setProductSections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { addToCart } = useCart();
+  const [productLoadingStates, setProductLoadingStates] = useState(new Set());
+  const { addToCart, updateQuantity, removeFromCart, items, operationLoading } = useCart();
   const { isAuthenticated } = useAuth();
 
   useEffect(() => {
@@ -86,13 +88,99 @@ const ProductSections = () => {
     }));
   };
 
-  const handleAddToCart = (product) => {
+  // Helper function to check if product is in cart
+  const getCartItem = useCallback((productId) => {
+    return items.find(item => item.product_id === productId);
+  }, [items]);
+
+  // Helper function to get quantity of product in cart
+  const getCartQuantity = useCallback((productId) => {
+    const cartItem = getCartItem(productId);
+    return cartItem ? cartItem.quantity : 0;
+  }, [getCartItem]);
+
+  const handleAddToCart = async (product) => {
     if (!isAuthenticated) {
       navigate('/signup');
       return;
     }
-    addToCart(product);
+    
+    // Set loading state for this specific product
+    setProductLoadingStates(prev => new Set(prev).add(product.id));
+    
+    try {
+      await addToCart(product);
+    } finally {
+      // Remove loading state after operation completes
+      setTimeout(() => {
+        setProductLoadingStates(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(product.id);
+          return newSet;
+        });
+      }, 300); // Small delay for smooth UX
+    }
   };
+
+  const handleUpdateQuantity = useCallback(async (productId, newQuantity) => {
+    const cartItem = getCartItem(productId);
+    if (cartItem) {
+      // Set loading state for this specific product
+      setProductLoadingStates(prev => new Set(prev).add(productId));
+      
+      try {
+        if (newQuantity <= 0) {
+          await removeFromCart(cartItem.id);
+        } else {
+          await updateQuantity(cartItem.id, newQuantity);
+        }
+      } finally {
+        // Remove loading state after operation completes
+        setTimeout(() => {
+          setProductLoadingStates(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(productId);
+            return newSet;
+          });
+        }, 300);
+      }
+    }
+  }, [getCartItem, updateQuantity, removeFromCart]);
+
+  // Quantity Controls Component
+  const QuantityControls = ({ product, quantity, isLoading }) => (
+    <div className="quantity-controls-card">
+      <button 
+        className="quantity-btn decrease"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleUpdateQuantity(product.id, quantity - 1);
+        }}
+        aria-label="Decrease quantity"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M5 12h14"/>
+        </svg>
+      </button>
+      
+      <div className="quantity-display">
+        <span className="quantity-number">{quantity}</span>
+      </div>
+      
+      <button 
+        className="quantity-btn increase"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleUpdateQuantity(product.id, quantity + 1);
+        }}
+        aria-label="Increase quantity"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+      </button>
+    </div>
+  );
 
   const scrollProducts = (containerRef, direction) => {
     if (containerRef.current) {
@@ -126,29 +214,51 @@ const ProductSections = () => {
               { name: 'Paracetamol 500mg', price: 45, imageUrl: 'https://dummyimage.com/300x300/eff6ff/1e293b&text=Paracetamol+500mg' },
               { name: 'Ibuprofen 400mg', price: 60, imageUrl: 'https://dummyimage.com/300x300/fef3c7/1e293b&text=Ibuprofen+400mg' },
               { name: 'Vitamin D3 1000IU', price: 180, imageUrl: 'https://dummyimage.com/300x300/f0fdf4/1e293b&text=Vitamin+D3+1000IU' }
-            ].map((product, index) => (
-              <div 
-                key={index} 
-                className="product-card"
-                onClick={() => navigate(`/product/${product.id || 'fallback-${index}'}`)}
-                style={{ cursor: 'pointer' }}
-              >
-                <div className="product-image">
-                  <img src={product.imageUrl} alt={product.name} />
-                </div>
-                <div className="product-name">{product.name}</div>
-                <div className="product-price">₹{product.price}</div>
-                <button 
-                  className="add-to-cart" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleAddToCart(product);
-                  }}
+            ].map((product, index) => {
+              const fallbackProduct = { ...product, id: `fallback-${index}` };
+              const cartQuantity = getCartQuantity(fallbackProduct.id);
+              const isInCart = cartQuantity > 0;
+              const isProductLoading = productLoadingStates.has(fallbackProduct.id);
+              
+              return (
+                <div 
+                  key={index} 
+                  className="product-card"
+                  onClick={() => navigate(`/product/${fallbackProduct.id}`)}
+                  style={{ cursor: 'pointer' }}
                 >
-                  Add to Cart
-                </button>
-              </div>
-            ))}
+                  <div className="product-image">
+                    <img src={product.imageUrl} alt={product.name} />
+                  </div>
+                  <div className="product-name">{product.name}</div>
+                  <div className="product-price">₹{product.price}</div>
+                  
+                  {isInCart ? (
+                    <QuantityControls 
+                      product={fallbackProduct}
+                      quantity={cartQuantity}
+                      isLoading={isProductLoading}
+                    />
+                  ) : (
+                    <button 
+                      className="add-to-cart" 
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        await handleAddToCart(fallbackProduct);
+                      }}
+                      disabled={isProductLoading}
+                    >
+                      {isProductLoading ? (
+                        <>
+                          <LoadingSpinner size="sm" />
+                          <span>Adding...</span>
+                        </>
+                      ) : 'Add to Cart'}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -200,30 +310,52 @@ const ProductSections = () => {
               &lsaquo;
             </button>
             <div className="product-grid">
-              {section.products.map((product, productIndex) => (
-                <div 
-                  key={product.id} 
-                  className="product-card"
-                  onClick={() => navigate(`/product/${product.id}`)}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <div className="product-image">
-                    <img src={product.imageUrl} alt={product.name} />
-                  </div>
-                  <div className="product-name">{product.name}</div>
-                  <div className="product-price">₹{product.price}</div>
-                  <button 
-                    className="add-to-cart"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleAddToCart(product);
-                    }}
-                    disabled={!product.inStock}
+              {section.products.map((product, productIndex) => {
+                const cartQuantity = getCartQuantity(product.id);
+                const isInCart = cartQuantity > 0;
+                const isProductLoading = productLoadingStates.has(product.id);
+                
+                return (
+                  <div 
+                    key={product.id} 
+                    className="product-card"
+                    onClick={() => navigate(`/product/${product.id}`)}
+                    style={{ cursor: 'pointer' }}
                   >
-                    {product.inStock ? 'Add to Cart' : 'Out of Stock'}
-                  </button>
-                </div>
-              ))}
+                    <div className="product-image">
+                      <img src={product.imageUrl} alt={product.name} />
+                    </div>
+                    <div className="product-name">{product.name}</div>
+                    <div className="product-price">₹{product.price}</div>
+                    
+                    {/* Conditional rendering: Show quantity controls if in cart, otherwise show Add to Cart button */}
+                    {isInCart ? (
+                      <QuantityControls 
+                        product={product}
+                        quantity={cartQuantity}
+                        isLoading={isProductLoading}
+                      />
+                    ) : (
+                      <button 
+                        className="add-to-cart"
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          await handleAddToCart(product);
+                        }}
+                        disabled={!product.inStock || isProductLoading}
+                      >
+                        {!product.inStock ? 'Out of Stock' : 
+                         isProductLoading ? (
+                           <>
+                             <LoadingSpinner size="sm" />
+                             <span>Adding...</span>
+                           </>
+                         ) : 'Add to Cart'}
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
             </div>
             <button 
               className="scroll-btn next-btn" 

@@ -35,8 +35,22 @@ const SignUp = () => {
   };
 
   const validatePhone = (phone) => {
-    const phoneRegex = /^[0-9]{10}$/;
-    return phoneRegex.test(phone);
+    // Check if phone contains only numeric characters
+    if (!/^[0-9]*$/.test(phone)) {
+      return { isValid: false, error: 'Only numbers are allowed.' };
+    }
+    
+    // Check phone length
+    if (phone.length < 10) {
+      return { isValid: false, error: 'Phone number must be 10 digits.' };
+    }
+    
+    if (phone.length > 10) {
+      return { isValid: false, error: 'Phone number cannot exceed 10 digits.' };
+    }
+    
+    // If exactly 10 digits and all numeric
+    return { isValid: true, error: null };
   };
 
   const showError = (field, message) => {
@@ -54,14 +68,40 @@ const SignUp = () => {
   // Handle input changes
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({ 
-      ...prev, 
-      [name]: type === 'checkbox' ? checked : value 
-    }));
     
-    // Clear error when user starts typing
-    if (errors[name]) {
-      hideError(name);
+    // For phone field, only allow numeric input and limit to 10 digits
+    if (name === 'phone') {
+      // Remove any non-numeric characters
+      const numericValue = value.replace(/[^0-9]/g, '');
+      // Limit to 10 digits
+      const limitedValue = numericValue.slice(0, 10);
+      
+      setFormData(prev => ({ 
+        ...prev, 
+        [name]: limitedValue
+      }));
+      
+      // Real-time validation for phone
+      if (limitedValue.length > 0) {
+        const phoneValidation = validatePhone(limitedValue);
+        if (!phoneValidation.isValid) {
+          showError('phone', phoneValidation.error);
+        } else {
+          hideError('phone');
+        }
+      } else {
+        hideError('phone');
+      }
+    } else {
+      setFormData(prev => ({ 
+        ...prev, 
+        [name]: type === 'checkbox' ? checked : value 
+      }));
+      
+      // Clear error when user starts typing
+      if (errors[name]) {
+        hideError(name);
+      }
     }
     
     // Clear auth error when user types
@@ -114,9 +154,12 @@ const SignUp = () => {
     if (!formData.phone) {
       showError('phone', 'Phone number is required');
       hasErrors = true;
-    } else if (!validatePhone(formData.phone)) {
-      showError('phone', 'Please enter a valid 10-digit phone number');
-      hasErrors = true;
+    } else {
+      const phoneValidation = validatePhone(formData.phone);
+      if (!phoneValidation.isValid) {
+        showError('phone', phoneValidation.error);
+        hasErrors = true;
+      }
     }
     
     if (!formData.agreeToTerms) {
@@ -286,7 +329,11 @@ const SignUp = () => {
               onChange={handleInputChange}
               placeholder="Enter your 10-digit phone number"
               className={errors.phone ? 'error' : ''}
+              maxLength="10"
+              pattern="[0-9]{10}"
+              title="Please enter exactly 10 digits (Indian standard)"
             />
+            <small className="field-help">Must be exactly 10 digits (Indian standard)</small>
             {errors.phone && <span className="error-message">{errors.phone}</span>}
           </div>
           

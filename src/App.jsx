@@ -30,6 +30,7 @@ import Addresses from './Addresses';
 import Checkout from './Checkout';
 import OrderSuccess from './OrderSuccess';
 import MyOrders from './MyOrders';
+import CartDebug from './CartDebug';
 import './App.css';
 
 function App() {
@@ -75,6 +76,7 @@ function App() {
               </Routes>
             </main>
             <Footer />
+            <CartDebug />
           </div>
         </Router>
       </CartProvider>

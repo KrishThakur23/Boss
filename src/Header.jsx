@@ -19,6 +19,7 @@ const Header = forwardRef(({ isSearchActive, currentSearchTerm = 'medicines' }, 
   const userMenuRef = useRef(null);
   const [displayText, setDisplayText] = useState(currentSearchTerm);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [searchValue, setSearchValue] = useState('');
 
   // Toggle user dropdown
   const toggleUserDropdown = () => {
@@ -100,8 +101,14 @@ const Header = forwardRef(({ isSearchActive, currentSearchTerm = 'medicines' }, 
 
         <div className="user-actions">
           <div className="header-search-container">
-            <input type="text" className="header-search-bar" placeholder=" " />
-            <div className="custom-placeholder header-placeholder">
+            <input 
+              type="text" 
+              className="header-search-bar" 
+              placeholder=" "
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+            />
+            <div className={`custom-placeholder header-placeholder ${searchValue ? 'hidden' : ''}`}>
               <span className="static-text">Search for&nbsp;</span>
               <div className="dynamic-text-wrapper">
                 <span className={`dynamic-text ${isAnimating ? 'exit' : ''}`}>

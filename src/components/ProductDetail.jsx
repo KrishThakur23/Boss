@@ -8,7 +8,7 @@ import './ProductDetail.css';
 const ProductDetail = () => {
   const { productId } = useParams();
   const navigate = useNavigate();
-  const { addToCart } = useCart();
+  const { addToCart, updateQuantity, removeFromCart, items, operationLoading } = useCart();
   const { isAuthenticated } = useAuth();
 
   const [product, setProduct] = useState(null);
@@ -24,6 +24,80 @@ const ProductDetail = () => {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [recommendedProducts, setRecommendedProducts] = useState([]);
   const [viewCount, setViewCount] = useState(0);
+
+  // Helper functions for cart management
+  const getCartItem = useCallback((productId) => {
+    return items.find(item => item.product_id === productId);
+  }, [items]);
+
+  const getCartQuantity = useCallback((productId) => {
+    const cartItem = getCartItem(productId);
+    return cartItem ? cartItem.quantity : 0;
+  }, [getCartItem]);
+
+  const handleUpdateQuantity = useCallback((productId, newQuantity) => {
+    const cartItem = getCartItem(productId);
+    if (cartItem) {
+      if (newQuantity <= 0) {
+        removeFromCart(cartItem.id);
+      } else {
+        updateQuantity(cartItem.id, newQuantity);
+      }
+    }
+  }, [getCartItem, updateQuantity, removeFromCart]);
+
+  const handleAddToCart = useCallback((productToAdd) => {
+    if (!isAuthenticated) {
+      navigate('/signup');
+      return;
+    }
+    
+    // If no product is passed, use the current product with selected quantity
+    const productData = productToAdd || (product ? { ...product, quantity } : null);
+    
+    if (productData) {
+      addToCart(productData);
+      setShowSuccessMessage(true);
+      setTimeout(() => setShowSuccessMessage(false), 3000);
+    }
+  }, [addToCart, isAuthenticated, navigate, product, quantity]);
+
+  // Horizontal Quantity Controls Component for Recommended Products
+  const HorizontalQuantityControls = ({ product, quantity, isLoading }) => (
+    <div className="horizontal-quantity-controls">
+      <button 
+        className="quantity-btn-horizontal decrease"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleUpdateQuantity(product.id, quantity - 1);
+        }}
+        disabled={isLoading || quantity <= 1}
+        aria-label="Decrease quantity"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M5 12h14"/>
+        </svg>
+      </button>
+      
+      <div className="quantity-display-horizontal">
+        <span className="quantity-number-horizontal">{quantity}</span>
+      </div>
+      
+      <button 
+        className="quantity-btn-horizontal increase"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleUpdateQuantity(product.id, quantity + 1);
+        }}
+        disabled={isLoading}
+        aria-label="Increase quantity"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+      </button>
+    </div>
+  );
 
   useEffect(() => {
     if (productId) {
@@ -117,18 +191,7 @@ const ProductDetail = () => {
     }
   };
 
-  const handleAddToCart = () => {
-    if (!isAuthenticated) {
-      navigate('/signup');
-      return;
-    }
-    
-    if (product) {
-      addToCart({ ...product, quantity });
-      setShowSuccessMessage(true);
-      setTimeout(() => setShowSuccessMessage(false), 3000);
-    }
-  };
+
 
   const handleQuantityChange = (newQuantity) => {
     if (newQuantity >= 1 && newQuantity <= (product?.stock_quantity || 10)) {
@@ -667,12 +730,17 @@ const ProductDetail = () => {
                 </div>
                 <div className="products-carousel">
                   <div className="recommended-products-grid">
-                    {recommendedProducts.slice(0, 6).map((recommendedProduct, index) => (
-                      <div
-                        key={recommendedProduct.id}
-                        className="recommended-product-card"
-                        style={{ animationDelay: `${index * 0.1}s` }}
-                      >
+                    {recommendedProducts.slice(0, 6).map((recommendedProduct, index) => {
+                      const cartQuantity = getCartQuantity(recommendedProduct.id);
+                      const isInCart = cartQuantity > 0;
+                      const isProductLoading = operationLoading.add || operationLoading.update || operationLoading.remove;
+                      
+                      return (
+                        <div
+                          key={recommendedProduct.id}
+                          className="recommended-product-card"
+                          style={{ animationDelay: `${index * 0.1}s` }}
+                        >
                         <div className="product-badge-container">
                           {index === 0 && <span className="trending-badge">🔥 Trending</span>}
                           {index === 1 && <span className="bestseller-badge">⭐ Best Seller</span>}
@@ -700,19 +768,32 @@ const ProductDetail = () => {
                                 <span className="btn-icon">👁️</span>
                                 <span className="btn-text">Quick View</span>
                               </button>
-                              <button 
-                                className="action-btn quick-add-btn"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  addToCart({ ...recommendedProduct, quantity: 1 });
-                                  setShowSuccessMessage(true);
-                                  setTimeout(() => setShowSuccessMessage(false), 3000);
-                                }}
-                                title="Add to Cart"
-                              >
-                                <span className="btn-icon">🛒</span>
-                                <span className="btn-text">Add to Cart</span>
-                              </button>
+                              
+                              {/* Conditional rendering: Show quantity controls if in cart, otherwise show Add to Cart button */}
+                              {isInCart ? (
+                                <div className="action-btn quantity-control-wrapper">
+                                  <HorizontalQuantityControls 
+                                    product={recommendedProduct}
+                                    quantity={cartQuantity}
+                                    isLoading={isProductLoading}
+                                  />
+                                </div>
+                              ) : (
+                                <button 
+                                  className="action-btn quick-add-btn"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleAddToCart({ ...recommendedProduct, quantity: 1 });
+                                  }}
+                                  disabled={isProductLoading}
+                                  title="Add to Cart"
+                                >
+                                  <span className="btn-icon">🛒</span>
+                                  <span className="btn-text">
+                                    {isProductLoading ? 'Adding...' : 'Add to Cart'}
+                                  </span>
+                                </button>
+                              )}
                             </div>
                           </div>
                           <button 
@@ -764,7 +845,8 @@ const ProductDetail = () => {
                           </div>
                         </div>
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
                 

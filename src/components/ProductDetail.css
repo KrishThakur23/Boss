@@ -582,11 +582,22 @@
   font-weight: 700;
   transition: all 0.3s ease;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  color: #6b7280;
 }
 
 .quantity-btn:hover:not(:disabled) {
-  border-color: #0891b2;
-  color: #0891b2;
+  color: white;
+  transform: scale(1.05);
+}
+
+.quantity-btn:first-child:hover:not(:disabled) {
+  background: #ef4444;
+  border-color: #ef4444;
+}
+
+.quantity-btn:last-child:hover:not(:disabled) {
+  background: #22c55e;
+  border-color: #22c55e;
 }
 
 .quantity-btn:disabled {
@@ -2159,4 +2170,189 @@
     top: 10px;
     right: 10px;
   }
+}
+/* Horizontal Quantity Controls for Recommended Products */
+.horizontal-quantity-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid #3b82f6;
+  border-radius: 25px;
+  padding: 0.4rem 0.8rem;
+  min-width: 120px;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.horizontal-quantity-controls:hover {
+  background: rgba(255, 255, 255, 1);
+  border-color: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.quantity-btn-horizontal {
+  background: transparent;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.quantity-btn-horizontal:hover:not(:disabled) {
+  color: white;
+  transform: scale(1.1);
+}
+
+.quantity-btn-horizontal:disabled {
+  background: #cbd5e1;
+  cursor: not-allowed;
+  transform: none;
+  opacity: 0.6;
+}
+
+.quantity-display-horizontal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #1f2937;
+}
+
+.quantity-number-horizontal {
+  background: #f8fafc;
+  padding: 0.3rem 0.6rem;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  min-width: 28px;
+  text-align: center;
+  font-weight: 700;
+  color: #374151;
+}
+
+/* Wrapper for quantity controls in action buttons */
+.quantity-control-wrapper {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  cursor: default !important;
+}
+
+.quantity-control-wrapper:hover {
+  background: transparent !important;
+  transform: none !important;
+}
+
+/* Ensure proper spacing in action buttons */
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* Responsive adjustments for horizontal controls */
+@media (max-width: 768px) {
+  .horizontal-quantity-controls {
+    gap: 0.3rem;
+    padding: 0.3rem 0.6rem;
+    min-width: 100px;
+  }
+  
+  .quantity-btn-horizontal {
+    width: 24px;
+    height: 24px;
+    font-size: 10px;
+  }
+  
+  .quantity-display-horizontal {
+    min-width: 28px;
+    font-size: 0.85rem;
+  }
+  
+  .quantity-number-horizontal {
+    padding: 0.2rem 0.4rem;
+    min-width: 24px;
+    font-size: 0.85rem;
+  }
+}
+
+/* Animation for state transitions */
+.horizontal-quantity-controls {
+  animation: slideInHorizontal 0.3s ease-out;
+}
+
+@keyframes slideInHorizontal {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Loading state for horizontal controls */
+.horizontal-quantity-controls.loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.horizontal-quantity-controls.loading .quantity-btn-horizontal {
+  background: #cbd5e1;
+}
+
+/* Success animation when item is added */
+.recommended-product-card.just-added .horizontal-quantity-controls {
+  animation: addedSuccess 0.6s ease-out;
+}
+
+@keyframes addedSuccess {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+    border-color: #10b981;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Ensure the controls don't interfere with card hover effects */
+.recommended-product-card:hover .horizontal-quantity-controls {
+  border-color: #2563eb;
+}
+
+/* Better visual hierarchy */
+.horizontal-quantity-controls .quantity-btn-horizontal.decrease {
+  background: #ef4444;
+}
+
+.horizontal-quantity-controls .quantity-btn-horizontal.decrease:hover:not(:disabled) {
+  background: #dc2626;
+}
+
+.horizontal-quantity-controls .quantity-btn-horizontal.increase {
+  background: #10b981;
+}
+
+.horizontal-quantity-controls .quantity-btn-horizontal.increase:hover:not(:disabled) {
+  background: #059669;
 }

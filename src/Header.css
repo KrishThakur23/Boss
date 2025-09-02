@@ -120,6 +120,11 @@
   pointer-events: none;
   display: flex;
   align-items: baseline;
+  transition: opacity 0.2s ease;
+}
+
+.custom-placeholder.hidden {
+  opacity: 0;
 }
 
 .header-placeholder {

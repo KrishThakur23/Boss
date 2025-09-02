@@ -213,12 +213,19 @@
   cursor: pointer;
   font-weight: 600;
   transition: all 0.2s ease;
+  color: #6b7280;
 }
 
-.quantity-controls button:hover {
-  background: #0891b2;
+.quantity-controls button:first-child:hover {
+  background: #ef4444;
   color: white;
-  border-color: #0891b2;
+  border-color: #ef4444;
+}
+
+.quantity-controls button:last-child:hover {
+  background: #22c55e;
+  color: white;
+  border-color: #22c55e;
 }
 
 .quantity-controls span {
