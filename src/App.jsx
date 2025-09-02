@@ -10,6 +10,7 @@ import SignUp from './SignUp';
 import AboutUs from './AboutUs';
 import Profile from './Profile';
 import AdminDashboard from './AdminDashboard';
+import OrdersPage from './OrdersPage';
 import Donate from './Donate';
 import Partner from './Partner';
 import HelpCenter from './HelpCenter';
@@ -30,7 +31,7 @@ import Addresses from './Addresses';
 import Checkout from './Checkout';
 import OrderSuccess from './OrderSuccess';
 import MyOrders from './MyOrders';
-import CartDebug from './CartDebug';
+
 import './App.css';
 
 function App() {
@@ -53,6 +54,7 @@ function App() {
                 <Route path="/about" element={<AboutUs />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/orders" element={<OrdersPage />} />
                 <Route path="/donate" element={<Donate />} />
                 <Route path="/partner" element={<Partner />} />
                 <Route path="/help-center" element={<HelpCenter />} />
@@ -76,7 +78,7 @@ function App() {
               </Routes>
             </main>
             <Footer />
-            <CartDebug />
+    
           </div>
         </Router>
       </CartProvider>

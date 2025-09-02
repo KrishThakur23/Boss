@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import { addressService } from './services/addressService';
 import Header from './Header';
-import Footer from './Footer';
 import './Addresses.css';
 
 const Addresses = () => {
@@ -281,7 +280,6 @@ const Addresses = () => {
           )}
         </div>
       </main>
-      <Footer />
     </div>
   );
 };

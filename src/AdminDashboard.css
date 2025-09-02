@@ -109,6 +109,28 @@
   align-items: center;
 }
 
+.header-actions .btn-primary {
+  background: var(--primary-color);
+  color: var(--white-color);
+  border: none;
+  padding: 12px 24px;
+  border-radius: var(--border-radius);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 12px;
+}
+
+.header-actions .btn-primary:hover {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
 .dark-mode-toggle {
   background: var(--gray-100);
   border: 2px solid var(--gray-200);
@@ -726,26 +748,65 @@
   margin-bottom: 20px;
 }
 
+/* ========== LOADING AND ERROR STATES ========== */
+
 .loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
   text-align: center;
-  padding: 60px 40px;
 }
 
-.loading-state h3 {
-  margin: 0 0 10px 0;
-  font-size: 1.5rem;
-  color: var(--gray-800);
-  font-weight: 600;
-}
-
-.loading-state p {
-  margin: 0;
-  color: var(--gray-600);
-  font-size: 1rem;
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--gray-200);
+  border-top: 4px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-state p {
+  color: var(--gray-600);
+  font-size: 1rem;
+  margin: 0;
+}
+
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  text-align: center;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: var(--border-radius);
+}
+
+.error-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.error-state h4 {
+  color: #dc2626;
+  margin: 0 0 0.5rem 0;
+  font-size: 1.25rem;
+}
+
+.error-state p {
+  color: #7f1d1d;
+  margin: 0 0 1rem 0;
+  font-size: 0.875rem;
 }
 
 /* ========== UNAUTHORIZED CARD ========== */
@@ -892,5 +953,113 @@
     padding: 20px;
   }
 }
+
+/* ========== ADDITIONAL ORDER STYLES ========== */
+
+/* Order Summary */
+.order-summary {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: var(--gray-50);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--gray-200);
+}
+
+.order-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.order-summary-row:last-child {
+  border-bottom: none;
+}
+
+.summary-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--gray-600);
+}
+
+.summary-value {
+  font-size: 0.875rem;
+  color: var(--gray-900);
+  font-weight: 500;
+}
+
+/* Shipping Address Section */
+.shipping-address-section {
+  margin-bottom: 2rem;
+}
+
+.shipping-address-section h4 {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--gray-800);
+}
+
+.address-details {
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--border-radius);
+  padding: 1rem;
+}
+
+.address-line {
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--gray-700);
+  line-height: 1.4;
+}
+
+.address-line:last-child {
+  margin-bottom: 0;
+}
+
+.address-line strong {
+  color: var(--gray-900);
+}
+
+/* Order Notes Section */
+.order-notes-section {
+  margin-bottom: 2rem;
+}
+
+.order-notes-section h4 {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--gray-800);
+}
+
+.notes-content {
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--border-radius);
+  padding: 1rem;
+  font-size: 0.875rem;
+  color: var(--gray-700);
+  line-height: 1.5;
+}
+
+/* Discount Amount */
+.discount-amount {
+  color: var(--success-color) !important;
+  font-weight: 600;
+}
+
+/* Order Total with Discount */
+.order-total .discount-info {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--success-color);
+  font-weight: 500;
+  margin-top: 0.25rem;
+}
+
+
 
 

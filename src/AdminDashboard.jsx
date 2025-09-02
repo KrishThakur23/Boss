@@ -24,12 +24,31 @@ const AdminDashboard = () => {
   const [showProductForm, setShowProductForm] = useState(false);
   const [categories, setCategories] = useState([]);
 
+  // Category management state
+  const [showCategoryForm, setShowCategoryForm] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryDescription, setNewCategoryDescription] = useState('');
+  const [isCategorySubmitting, setIsCategorySubmitting] = useState(false);
+  const [categoryMessage, setCategoryMessage] = useState('');
+
   // Dashboard stats
   const [dashboardStats, setDashboardStats] = useState({
     totalProducts: 0,
-    totalCategories: 0
+    totalCategories: 0,
+    totalOrders: 0,
+    pendingOrders: 0,
+    completedOrders: 0
   });
 
+  // Orders state
+  const [orders, setOrders] = useState([]);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [showOrderModal, setShowOrderModal] = useState(false);
+  const [orderStatus, setOrderStatus] = useState('');
+  const [isUpdatingOrder, setIsUpdatingOrder] = useState(false);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [ordersError, setOrdersError] = useState(null);
+  
   // Search and filters
   const [searchTerm, setSearchTerm] = useState('');
   const [darkMode, setDarkMode] = useState(false);
@@ -37,25 +56,38 @@ const AdminDashboard = () => {
   // Toast notifications
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
+  // Temporary admin access for testing
+  const [tempAdminAccess, setTempAdminAccess] = useState(false);
+
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
   // Load products and categories on component mount
   useEffect(() => {
+    console.log('🔄 Component mount useEffect triggered');
+    console.log('📦 Loading products...');
     loadProducts();
+    console.log('🏷️ Loading categories...');
     loadCategories();
+    console.log('📋 Loading orders...');
+    loadOrders();
   }, []);
 
   // Update dashboard stats
   useEffect(() => {
     updateDashboardStats();
-  }, [products, categories]);
+  }, [products, categories, orders]);
 
   const updateDashboardStats = () => {
     setDashboardStats({
       totalProducts: products.length,
-      totalCategories: categories.length
+      totalCategories: categories.length,
+      totalOrders: orders.length,
+      pendingOrders: orders.filter(order => order.status === 'pending').length,
+      completedOrders: orders.filter(order => order.status === 'delivered').length
     });
   };
+
+
 
   const loadCategories = async () => {
     try {
@@ -85,6 +117,90 @@ const AdminDashboard = () => {
       setProducts(data || []);
     } catch (err) {
       console.error('Error loading products:', err);
+    }
+  };
+
+  const loadOrders = async () => {
+    try {
+      console.log('🔄 loadOrders called - starting to fetch orders...');
+      console.log('🔗 Supabase client:', supabase);
+      console.log('🔑 Supabase URL:', process.env.REACT_APP_SUPABASE_URL);
+      console.log('🔑 Supabase Key exists:', !!process.env.REACT_APP_SUPABASE_ANON_KEY);
+      console.log('👤 Current user:', user);
+      console.log('🔐 Is authenticated:', isAuthenticated);
+      console.log('👑 Is admin:', isAdminUser);
+      
+      // Check what tables are available
+      console.log('📋 Checking available tables...');
+      try {
+        const { data: tables, error: tablesError } = await supabase
+          .from('information_schema.tables')
+          .select('table_name')
+          .eq('table_schema', 'public');
+        
+        console.log('📋 Available tables:', tables?.map(t => t.table_name) || 'Error fetching tables');
+      } catch (tableErr) {
+        console.log('📋 Could not check tables (normal for non-admin users):', tableErr.message);
+      }
+      
+      setOrdersLoading(true);
+      setOrdersError(null);
+      
+      // Test simple query first to check permissions
+      console.log('🧪 Testing basic orders table access...');
+      const { data: testData, error: testError } = await supabase
+        .from('orders')
+        .select('id')
+        .limit(1);
+      
+      console.log('🧪 Test query result:', { testData, testError });
+      
+      if (testError) {
+        console.error('❌ Test query failed - permission issue:', testError);
+        throw new Error(`Database access denied: ${testError.message}`);
+      }
+      
+      // Check if there are any orders at all (without any filters)
+      console.log('🔍 Checking total orders count...');
+      const { count: totalCount, error: countError } = await supabase
+        .from('orders')
+        .select('*', { count: 'exact', head: true });
+      
+      console.log('🔍 Total orders count:', { totalCount, countError });
+      
+      // Check table structure to see what columns exist
+      console.log('🏗️ Checking orders table structure...');
+      const { data: sampleOrder, error: sampleError } = await supabase
+        .from('orders')
+        .select('*')
+        .limit(1);
+      
+      console.log('🏗️ Sample order structure:', sampleOrder?.[0] || 'No orders found');
+      
+      // Simple query like MyOrders.jsx but without user_id filter
+      console.log('📡 Making full Supabase query to orders table...');
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      console.log('📊 Supabase response:', { data, error });
+
+      if (error) {
+        console.error('❌ Supabase error:', error);
+        throw error;
+      }
+      
+      console.log('✅ Orders fetched successfully:', data);
+      console.log('📈 Setting orders state with:', data?.length || 0, 'orders');
+      setOrders(data || []);
+      console.log('✅ Orders state updated');
+    } catch (err) {
+      console.error('❌ Error in loadOrders:', err);
+      setOrdersError('Failed to load orders. Please try again.');
+    } finally {
+      console.log('🏁 Setting ordersLoading to false');
+      setOrdersLoading(false);
     }
   };
 
@@ -181,6 +297,105 @@ const AdminDashboard = () => {
     setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3000);
   };
 
+  const handleCategorySubmit = async (e) => {
+    e.preventDefault();
+    setCategoryMessage('');
+    setIsCategorySubmitting(true);
+    
+    try {
+      const category = {
+        name: newCategoryName.trim(),
+        description: newCategoryDescription.trim(),
+        is_active: true
+      };
+
+      const { error } = await supabase
+        .from('categories')
+        .insert([category]);
+
+      if (error) throw error;
+
+      setCategoryMessage('✅ Category added successfully!');
+      setNewCategoryName('');
+      setNewCategoryDescription('');
+      setShowCategoryForm(false);
+      
+      showToast('Category added successfully!', 'success');
+      loadCategories(); // Refresh categories
+    } catch (error) {
+      console.error('Error creating category:', error);
+      setCategoryMessage(`❌ Error: ${error.message}`);
+      showToast(`Error: ${error.message}`, 'error');
+    } finally {
+      setIsCategorySubmitting(false);
+    }
+  };
+
+  const deleteCategory = async (id) => {
+    if (window.confirm('Are you sure you want to delete this category? Products in this category will be affected.')) {
+      try {
+        const { error } = await supabase
+          .from('categories')
+          .delete()
+          .eq('id', id);
+
+        if (error) throw error;
+        
+        showToast('Category deleted successfully!', 'success');
+        loadCategories();
+      } catch (error) {
+        showToast(`Error deleting category: ${error.message}`, 'error');
+      }
+    }
+  };
+
+  const updateOrderStatus = async (orderId, newStatus) => {
+    setIsUpdatingOrder(true);
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ status: newStatus })
+        .eq('id', orderId);
+
+      if (error) throw error;
+      
+      showToast(`Order status updated to ${newStatus}!`, 'success');
+      loadOrders();
+      setShowOrderModal(false);
+      setSelectedOrder(null);
+    } catch (error) {
+      showToast(`Error updating order: ${error.message}`, 'error');
+    } finally {
+      setIsUpdatingOrder(false);
+    }
+  };
+
+  const openOrderModal = (order) => {
+    setSelectedOrder(order);
+    setOrderStatus(order.status);
+    setShowOrderModal(true);
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR'
+    }).format(amount);
+  };
+
+  const getStatusColor = (status) => {
+    const statusColors = {
+      'pending': 'orange',
+      'confirmed': 'blue',
+      'processing': 'purple',
+      'shipped': 'indigo',
+      'delivered': 'green',
+      'cancelled': 'red',
+      'refunded': 'gray'
+    };
+    return statusColors[status] || 'gray';
+  };
+
   const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.description.toLowerCase().includes(searchTerm.toLowerCase())
@@ -224,9 +439,6 @@ const AdminDashboard = () => {
   // For development/testing - allow access if user is authenticated
   // In production, you should have proper admin role management
   const allowAccess = isAuthenticated && (isAdminUser || process.env.NODE_ENV === 'development');
-  
-  // Temporary admin access for testing
-  const [tempAdminAccess, setTempAdminAccess] = useState(false);
 
   if (!isAuthenticated) {
     return (
@@ -301,6 +513,13 @@ const AdminDashboard = () => {
                 >
                   {darkMode ? '☀️' : '🌙'}
                 </button>
+                <button 
+                  className="btn-primary orders-button" 
+                  onClick={() => navigate('/orders')}
+                >
+                  <span className="btn-icon">📋</span>
+                  View All Orders
+                </button>
                 <button className="btn-secondary" onClick={() => navigate('/')}>
                   <span className="btn-icon">👁️</span>
                   View Site
@@ -323,6 +542,27 @@ const AdminDashboard = () => {
               <div className="stat-content">
                 <div className="stat-number">{dashboardStats.totalCategories}</div>
                 <div className="stat-label">Total Categories</div>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon">📋</div>
+              <div className="stat-content">
+                <div className="stat-number">{dashboardStats.totalOrders}</div>
+                <div className="stat-label">Total Orders</div>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon">⏳</div>
+              <div className="stat-content">
+                <div className="stat-number">{dashboardStats.pendingOrders}</div>
+                <div className="stat-label">Pending Orders</div>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon">✅</div>
+              <div className="stat-content">
+                <div className="stat-number">{dashboardStats.completedOrders}</div>
+                <div className="stat-label">Completed Orders</div>
               </div>
             </div>
           </div>
@@ -559,8 +799,414 @@ const AdminDashboard = () => {
               )}
             </div>
           </div>
+
+          {/* Category Management Section */}
+          <div className="content-section">
+            <div className="section-header">
+              <h2 className="section-title">Category Management</h2>
+              <p className="section-subtitle">Add and manage product categories</p>
+            </div>
+
+            {/* Add Category Form */}
+            {showCategoryForm && (
+              <div className="admin-card">
+                <form onSubmit={handleCategorySubmit} className="admin-form">
+                  <div className="form-card">
+                    <div className="form-card-header">
+                      <div className="card-icon">🏷️</div>
+                      <h3>Add New Category</h3>
+                    </div>
+                    <div className="form-card-content">
+                      <div className="form-row">
+                        <div className="form-field">
+                          <label className="form-label">Category Name</label>
+                          <input 
+                            className="form-input" 
+                            value={newCategoryName} 
+                            onChange={(e) => setNewCategoryName(e.target.value)} 
+                            required 
+                            placeholder="e.g., Pain Relief, Vitamins, Antibiotics" 
+                          />
+                        </div>
+                        <div className="form-field">
+                          <label className="form-label">Description</label>
+                          <textarea 
+                            className="form-textarea" 
+                            value={newCategoryDescription} 
+                            onChange={(e) => setNewCategoryDescription(e.target.value)} 
+                            rows={3} 
+                            placeholder="Brief description of the category..." 
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Form Actions */}
+                  <div className="form-actions">
+                    <button 
+                      className="btn-secondary" 
+                      type="button" 
+                      onClick={() => setShowCategoryForm(false)}
+                    >
+                      <span className="btn-icon">❌</span>
+                      Cancel
+                    </button>
+                    <button 
+                      className="btn-primary" 
+                      type="submit" 
+                      disabled={isCategorySubmitting}
+                    >
+                      {isCategorySubmitting ? (
+                        <>
+                          <span className="loading-spinner"></span>
+                          Adding...
+                        </>
+                      ) : (
+                        <>
+                          <span className="btn-icon">✅</span>
+                          Add Category
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {categoryMessage && (
+                    <div className={`status-message ${categoryMessage.startsWith('✅') ? 'success' : 'error'}`}>
+                      {categoryMessage}
+                    </div>
+                  )}
+                </form>
+              </div>
+            )}
+
+            {/* Categories List */}
+            <div className="categories-section">
+              <div className="categories-header">
+                <div className="categories-title">
+                  <h3>Current Categories</h3>
+                  <span className="categories-count">({categories.length})</span>
+                </div>
+                <button 
+                  className="btn-primary floating-action"
+                  onClick={() => setShowCategoryForm(!showCategoryForm)}
+                >
+                  <span className="btn-icon">+</span>
+                  {showCategoryForm ? 'Cancel' : 'Add New Category'}
+                </button>
+              </div>
+
+              {categories.length === 0 ? (
+                <div className="empty-state">
+                  <div className="empty-icon">🏷️</div>
+                  <h4>No categories found</h4>
+                  <p>Add your first category to organize your products!</p>
+                  <button 
+                    className="btn-primary"
+                    onClick={() => setShowCategoryForm(true)}
+                  >
+                    <span className="btn-icon">+</span>
+                    Add First Category
+                  </button>
+                </div>
+              ) : (
+                <div className="categories-grid">
+                  {categories.map((category) => (
+                    <div key={category.id} className="category-card">
+                      <div className="category-info">
+                        <h4 className="category-name">{category.name}</h4>
+                        <p className="category-description">{category.description || 'No description'}</p>
+                        <div className="category-meta">
+                          <span className="category-status">
+                            {category.is_active ? '🟢 Active' : '🔴 Inactive'}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="category-actions">
+                        <button 
+                          className="btn-danger"
+                          onClick={() => deleteCategory(category.id)}
+                        >
+                          <span className="btn-icon">🗑️</span>
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+
+
+
+
+
+
+
+
+          {/* Orders Management Section */}
+          <div className="content-section">
+            <div className="section-header">
+              <h2 className="section-title">Orders Management</h2>
+              <p className="section-subtitle">View and manage all orders across all accounts</p>
+              <button 
+                onClick={loadOrders}
+                className="btn-secondary"
+                style={{marginTop: '0.5rem'}}
+              >
+                🔄 Reload Orders Manually
+              </button>
+            </div>
+
+            {ordersLoading ? (
+              <div className="loading-state">
+                <div className="loading-spinner"></div>
+                <p>Loading orders...</p>
+              </div>
+            ) : ordersError ? (
+              <div className="error-state">
+                <div className="error-icon">❌</div>
+                <h4>Error loading orders</h4>
+                <p>{ordersError}</p>
+                <button 
+                  onClick={loadOrders}
+                  className="btn-primary"
+                  style={{marginTop: '1rem'}}
+                >
+                  🔄 Try Again
+                </button>
+              </div>
+            ) : orders.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-icon">📋</div>
+                <h4>No orders found</h4>
+                <p>Orders will appear here once customers start placing them!</p>
+              </div>
+            ) : (
+              <div className="orders-container">
+                <div className="orders-header">
+                  <h3>All Orders ({orders.length})</h3>
+                </div>
+                <div className="orders-grid">
+                  {orders.map((order) => (
+                    <div key={order.id} className="order-card">
+                      <div className="order-header">
+                        <div className="order-info">
+                          <h4 className="order-number">#{order.order_number}</h4>
+                          <p className="order-customer">
+                            {order.shipping_address?.name || 'Unknown Customer'}
+                          </p>
+                          <p className="order-date">
+                            {new Date(order.created_at).toLocaleDateString('en-IN', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                        </div>
+                        <div className="order-status">
+                          <span 
+                            className={`status-badge status-${getStatusColor(order.status)}`}
+                            onClick={() => openOrderModal(order)}
+                          >
+                            {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="order-summary">
+                        <div className="order-summary-row">
+                          <span className="summary-label">Payment Status:</span>
+                          <span className={`status-badge status-${order.payment_status === 'paid' ? 'green' : 'orange'}`}>
+                            {order.payment_status.charAt(0).toUpperCase() + order.payment_status.slice(1)}
+                          </span>
+                        </div>
+                        <div className="order-summary-row">
+                          <span className="summary-label">Payment Method:</span>
+                          <span className="summary-value">{order.payment_method || 'Not specified'}</span>
+                        </div>
+                        <div className="order-summary-row">
+                          <span className="summary-label">Location:</span>
+                          <span className="summary-value">
+                            {order.shipping_address?.city}, {order.shipping_address?.state}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="order-footer">
+                        <div className="order-total">
+                          <strong>Total: {formatCurrency(order.final_amount)}</strong>
+                          {order.discount_amount > 0 && (
+                            <span className="discount-info">
+                              (Saved: {formatCurrency(order.discount_amount)})
+                            </span>
+                          )}
+                        </div>
+                        <div className="order-actions">
+                          <button 
+                            className="btn-primary btn-sm"
+                            onClick={() => openOrderModal(order)}
+                          >
+                            <span className="btn-icon">👁️</span>
+                            View Details
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </main>
+
+      {/* Order Details Modal */}
+      {showOrderModal && selectedOrder && (
+        <div className="modal-overlay" onClick={() => setShowOrderModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Order Details - #{selectedOrder.order_number}</h3>
+              <button 
+                className="modal-close"
+                onClick={() => setShowOrderModal(false)}
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="modal-body">
+              <div className="order-details-grid">
+                <div className="order-detail-section">
+                  <h4>Customer Information</h4>
+                  <div className="detail-row">
+                    <span className="detail-label">Name:</span>
+                    <span className="detail-value">
+                      {selectedOrder.shipping_address?.name || 'Not provided'}
+                    </span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Phone:</span>
+                    <span className="detail-value">
+                      {selectedOrder.shipping_address?.phone || 'Not provided'}
+                    </span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Order Date:</span>
+                    <span className="detail-value">
+                      {new Date(selectedOrder.created_at).toLocaleDateString('en-IN', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="order-detail-section">
+                  <h4>Order Summary</h4>
+                  <div className="detail-row">
+                    <span className="detail-label">Order Number:</span>
+                    <span className="detail-value">#{selectedOrder.order_number}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Status:</span>
+                    <span className="detail-value">
+                      <span className={`status-badge status-${getStatusColor(selectedOrder.status)}`}>
+                        {selectedOrder.status.charAt(0).toUpperCase() + selectedOrder.status.slice(1)}
+                      </span>
+                    </span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Payment Status:</span>
+                    <span className="detail-value">
+                      <span className={`status-badge status-${selectedOrder.payment_status === 'paid' ? 'green' : 'orange'}`}>
+                        {selectedOrder.payment_status.charAt(0).toUpperCase() + selectedOrder.payment_status.slice(1)}
+                      </span>
+                    </span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Payment Method:</span>
+                    <span className="detail-value">{selectedOrder.payment_method || 'Not specified'}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Total Amount:</span>
+                    <span className="detail-value">{formatCurrency(selectedOrder.final_amount)}</span>
+                  </div>
+                  {selectedOrder.discount_amount > 0 && (
+                    <div className="detail-row">
+                      <span className="detail-label">Discount:</span>
+                      <span className="detail-value discount-amount">-{formatCurrency(selectedOrder.discount_amount)}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="shipping-address-section">
+                <h4>Shipping Address</h4>
+                <div className="address-details">
+                  <div className="address-line">
+                    <strong>{selectedOrder.shipping_address?.name}</strong>
+                  </div>
+                  <div className="address-line">
+                    {selectedOrder.shipping_address?.address_line1}
+                    {selectedOrder.shipping_address?.address_line2 && (
+                      <span>, {selectedOrder.shipping_address.address_line2}</span>
+                    )}
+                  </div>
+                  <div className="address-line">
+                    {selectedOrder.shipping_address?.city}, {selectedOrder.shipping_address?.state} {selectedOrder.shipping_address?.pincode}
+                  </div>
+                  <div className="address-line">
+                    Phone: {selectedOrder.shipping_address?.phone}
+                  </div>
+                </div>
+              </div>
+
+              {selectedOrder.notes && (
+                <div className="order-notes-section">
+                  <h4>Order Notes</h4>
+                  <div className="notes-content">
+                    {selectedOrder.notes}
+                  </div>
+                </div>
+              )}
+
+              <div className="order-actions-section">
+                <h4>Update Order Status</h4>
+                <div className="status-update-form">
+                  <select 
+                    value={orderStatus} 
+                    onChange={(e) => setOrderStatus(e.target.value)}
+                    className="status-select"
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="processing">Processing</option>
+                    <option value="shipped">Shipped</option>
+                    <option value="delivered">Delivered</option>
+                    <option value="cancelled">Cancelled</option>
+                    <option value="refunded">Refunded</option>
+                  </select>
+                  <button 
+                    className="btn-primary"
+                    onClick={() => updateOrderStatus(selectedOrder.id, orderStatus)}
+                    disabled={isUpdatingOrder || orderStatus === selectedOrder.status}
+                  >
+                    {isUpdatingOrder ? 'Updating...' : 'Update Status'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Toast Notification */}
       {toast.show && (

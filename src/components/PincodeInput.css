@@ -1,0 +1,234 @@
+/* PincodeInput Component Styles */
+
+.pincode-input-container {
+  width: 100%;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.pincode-input {
+  width: 100%;
+  padding: 12px 16px;
+  padding-right: 40px; /* Space for status icon */
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 16px;
+  font-family: inherit;
+  transition: all 0.3s ease;
+  background: #ffffff;
+  color: #1e293b;
+}
+
+.pincode-input:focus {
+  outline: none;
+  border-color: #0891b2;
+  box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.1);
+}
+
+.pincode-input:disabled {
+  background: #f1f5f9;
+  color: #64748b;
+  cursor: not-allowed;
+}
+
+/* Validation States */
+.pincode-input.valid {
+  border-color: #10b981;
+  background: #f0fdf4;
+}
+
+.pincode-input.valid:focus {
+  border-color: #059669;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.pincode-input.invalid {
+  border-color: #ef4444;
+  background: #fef2f2;
+}
+
+.pincode-input.invalid:focus {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.pincode-input.validating {
+  border-color: #f59e0b;
+  background: #fffbeb;
+}
+
+.pincode-input.validating:focus {
+  border-color: #d97706;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+}
+
+/* Status Icon */
+.status-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+  pointer-events: none;
+  transition: all 0.3s ease;
+}
+
+.status-icon.loading {
+  animation: spin 1s linear infinite;
+}
+
+.status-icon.valid {
+  color: #10b981;
+}
+
+.status-icon.invalid {
+  color: #ef4444;
+}
+
+@keyframes spin {
+  from { transform: translateY(-50%) rotate(0deg); }
+  to { transform: translateY(-50%) rotate(360deg); }
+}
+
+/* Validation Message */
+.validation-message {
+  margin-top: 8px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  min-height: 20px;
+}
+
+.validation-message.validating .loading-text {
+  color: #f59e0b;
+  font-style: italic;
+}
+
+.validation-message.valid .success-text {
+  color: #10b981;
+  font-weight: 500;
+}
+
+.validation-message.invalid .error-text {
+  color: #ef4444;
+  font-weight: 500;
+}
+
+/* Delivery Info */
+.delivery-info {
+  margin-top: 12px;
+  padding: 12px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  animation: slideDown 0.3s ease;
+}
+
+.delivery-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.city-state {
+  font-weight: 600;
+  color: #065f46;
+  font-size: 14px;
+}
+
+.delivery-charge {
+  color: #059669;
+  font-size: 13px;
+}
+
+.free-delivery {
+  color: #059669;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.delivery-time {
+  color: #047857;
+  font-size: 12px;
+  font-style: italic;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .pincode-input {
+    font-size: 16px; /* Prevent zoom on iOS */
+    padding: 14px 16px;
+    padding-right: 40px;
+  }
+  
+  .status-icon {
+    font-size: 18px;
+    right: 14px;
+  }
+  
+  .delivery-info {
+    padding: 10px;
+  }
+  
+  .delivery-details {
+    gap: 3px;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .pincode-input {
+    background: #1e293b;
+    color: #f1f5f9;
+    border-color: #475569;
+  }
+  
+  .pincode-input:focus {
+    border-color: #0891b2;
+    box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.2);
+  }
+  
+  .pincode-input.valid {
+    background: #064e3b;
+    border-color: #10b981;
+  }
+  
+  .pincode-input.invalid {
+    background: #450a0a;
+    border-color: #ef4444;
+  }
+  
+  .pincode-input.validating {
+    background: #451a03;
+    border-color: #f59e0b;
+  }
+  
+  .delivery-info {
+    background: #064e3b;
+    border-color: #10b981;
+  }
+  
+  .city-state {
+    color: #a7f3d0;
+  }
+  
+  .delivery-charge,
+  .free-delivery,
+  .delivery-time {
+    color: #6ee7b7;
+  }
+}

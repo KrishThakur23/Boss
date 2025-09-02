@@ -20,6 +20,8 @@ const Header = forwardRef(({ isSearchActive, currentSearchTerm = 'medicines' }, 
   const [displayText, setDisplayText] = useState(currentSearchTerm);
   const [isAnimating, setIsAnimating] = useState(false);
   const [searchValue, setSearchValue] = useState('');
+  const [userAddresses, setUserAddresses] = useState([]);
+  const [isLoadingAddresses, setIsLoadingAddresses] = useState(false);
 
   // Toggle user dropdown
   const toggleUserDropdown = () => {
@@ -47,6 +49,54 @@ const Header = forwardRef(({ isSearchActive, currentSearchTerm = 'medicines' }, 
   const changeLocation = () => {
     navigate('/addresses');
   };
+
+  const addAddress = () => {
+    navigate('/addresses');
+  };
+
+  // Fetch user addresses
+  const fetchUserAddresses = async () => {
+    if (!isAuthenticated || !user) return;
+    
+    try {
+      setIsLoadingAddresses(true);
+      const { data, error } = await supabase
+        .from('addresses')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('is_default', { ascending: false })
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setUserAddresses(data || []);
+    } catch (err) {
+      console.error('Error fetching addresses:', err);
+      setUserAddresses([]);
+    } finally {
+      setIsLoadingAddresses(false);
+    }
+  };
+
+  // Load addresses when user is authenticated
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      fetchUserAddresses();
+    } else {
+      setUserAddresses([]);
+    }
+  }, [isAuthenticated, user]);
+
+  // Refresh addresses when page becomes visible (user returns from addresses page)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && isAuthenticated && user) {
+        fetchUserAddresses();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [isAuthenticated, user]);
 
   // Close user menu on outside click
   useEffect(() => {
@@ -90,10 +140,32 @@ const Header = forwardRef(({ isSearchActive, currentSearchTerm = 'medicines' }, 
         <div className="logo-section">
           <Link to="/" className="logo">FlickXir</Link>
           <div className="location-container">
-            📍 Greater Noida, UP 
-            <button className="location-change-btn" onClick={changeLocation}>
-              Change
-            </button>
+            {isAuthenticated ? (
+              isLoadingAddresses ? (
+                <span className="location-loading">📍 Loading...</span>
+              ) : userAddresses.length > 0 ? (
+                <>
+                  📍 {userAddresses[0]?.city || 'Unknown City'}, {userAddresses[0]?.state || 'Unknown State'}
+                  <button className="location-change-btn" onClick={changeLocation}>
+                    Change
+                  </button>
+                </>
+              ) : (
+                <>
+                  📍 No address set
+                  <button className="location-add-btn" onClick={addAddress}>
+                    Add Address
+                  </button>
+                </>
+              )
+            ) : (
+              <>
+                📍 Greater Noida, UP 
+                <button className="location-change-btn" onClick={changeLocation}>
+                  Change
+                </button>
+              </>
+            )}
           </div>
         </div>
 
