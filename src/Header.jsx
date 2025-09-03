@@ -146,30 +146,24 @@ const Header = forwardRef(({ isSearchActive, currentSearchTerm = 'medicines' }, 
           <Link to="/" className="logo">FlickXir</Link>
           <div className="location-container">
             {isAuthenticated ? (
-              isLoadingAddresses ? (
-                <span className="location-loading">📍 Loading...</span>
-              ) : userAddresses.length > 0 ? (
-                <>
-                  📍 {userAddresses[0]?.city || 'Unknown City'}, {userAddresses[0]?.state || 'Unknown State'}
-                  <button className="location-change-btn" onClick={changeLocation}>
+              userAddresses && userAddresses.length > 0 ? (
+                <div className="location-display">
+                  <span className="location-text">
+                    {userAddresses[0]?.city}, {userAddresses[0]?.state}
+                  </span>
+                  <button className="location-change-btn" onClick={() => navigate('/addresses')}>
                     Change
                   </button>
-                </>
+                </div>
               ) : (
-                <>
-                  📍 No address set
-                  <button className="location-add-btn" onClick={addAddress}>
-                    Add Address
-                  </button>
-                </>
+                <button className="location-add-btn" onClick={() => navigate('/addresses')}>
+                  Add Address
+                </button>
               )
             ) : (
-              <>
-                📍 Greater Noida, UP 
-                <button className="location-change-btn" onClick={changeLocation}>
-                  Change
-                </button>
-              </>
+              <button className="location-add-btn" onClick={() => navigate('/signin')}>
+                Add Address
+              </button>
             )}
           </div>
         </div>

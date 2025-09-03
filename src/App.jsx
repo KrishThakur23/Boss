@@ -34,7 +34,6 @@ import OrderSuccess from './OrderSuccess';
 import MyOrders from './MyOrders';
 import OCRTest from './components/OCRTest';
 import DatabaseDebug from './components/DatabaseDebug';
-
 import './App.css';
 
 function App() {
@@ -81,6 +80,7 @@ function App() {
                  <Route path="/my-orders" element={<MyOrders />} />
                  <Route path="/ocr-test" element={<OCRTest />} />
                  <Route path="/database-debug" element={<DatabaseDebug />} />
+                 
               </Routes>
             </main>
             <Footer />

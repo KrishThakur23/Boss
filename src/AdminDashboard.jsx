@@ -53,6 +53,7 @@ const AdminDashboard = () => {
   const [donations, setDonations] = useState([]);
   const [donationsLoading, setDonationsLoading] = useState(false);
   const [donationsError, setDonationsError] = useState(null);
+  const [showDonationsSection, setShowDonationsSection] = useState(false);
   
   // Search and filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -75,6 +76,8 @@ const AdminDashboard = () => {
     loadCategories();
     console.log('📋 Loading orders...');
     loadOrders();
+    console.log('📋 Loading donations...');
+    loadDonations();
   }, []);
 
   // Update dashboard stats
@@ -209,7 +212,37 @@ const AdminDashboard = () => {
     }
   };
 
+  const loadDonations = async () => {
+    try {
+      setDonationsLoading(true);
+      setDonationsError(null);
+      
+      // Load all donations with user info
+      const { data, error } = await supabase
+        .from('admin_donations_view')
+        .select('*')
+        .order('created_at', { ascending: false });
 
+      if (error) {
+        // If view doesn't exist, try direct table query
+        console.log('View not found, trying direct table query...');
+        const { data: directData, error: directError } = await supabase
+          .from('donations')
+          .select('*')
+          .order('created_at', { ascending: false });
+        
+        if (directError) throw directError;
+        setDonations(directData || []);
+      } else {
+        setDonations(data || []);
+      }
+    } catch (err) {
+      console.error('Error loading donations:', err);
+      setDonationsError('Failed to load donations. Please try again.');
+    } finally {
+      setDonationsLoading(false);
+    }
+  };
 
   useEffect(() => {
     // Only redirect if we're done loading
@@ -401,6 +434,51 @@ const AdminDashboard = () => {
     return statusColors[status] || 'gray';
   };
 
+  // Donations management functions
+  const updateDonationStatus = async (donationId, newStatus, adminNotes = '') => {
+    try {
+      const { error } = await supabase
+        .from('donations')
+        .update({ 
+          status: newStatus, 
+          admin_notes: adminNotes,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', donationId);
+
+      if (error) throw error;
+
+      // Reload donations
+      await loadDonations();
+      showToast(`Donation status updated to ${newStatus}`, 'success');
+    } catch (error) {
+      console.error('Error updating status:', error);
+      showToast(`Failed to update status: ${error.message}`, 'error');
+    }
+  };
+
+  const getDonationStatusIcon = (status) => {
+    switch (status) {
+      case 'pending': return '⏳';
+      case 'approved': return '✅';
+      case 'rejected': return '❌';
+      case 'collected': return '📦';
+      case 'completed': return '🎉';
+      default: return '❓';
+    }
+  };
+
+  const getDonationStatusColor = (status) => {
+    switch (status) {
+      case 'pending': return 'orange';
+      case 'approved': return 'blue';
+      case 'rejected': return 'red';
+      case 'collected': return 'purple';
+      case 'completed': return 'green';
+      default: return 'gray';
+    }
+  };
+
   const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.description.toLowerCase().includes(searchTerm.toLowerCase())
@@ -568,6 +646,20 @@ const AdminDashboard = () => {
               <div className="stat-content">
                 <div className="stat-number">{dashboardStats.completedOrders}</div>
                 <div className="stat-label">Completed Orders</div>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon">📋</div>
+              <div className="stat-content">
+                <div className="stat-number">{donations.length}</div>
+                <div className="stat-label">Total Donations</div>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon">⏳</div>
+              <div className="stat-content">
+                <div className="stat-number">{donations.filter(d => d.status === 'pending').length}</div>
+                <div className="stat-label">Pending Donations</div>
               </div>
             </div>
           </div>
@@ -1059,6 +1151,146 @@ const AdminDashboard = () => {
                             <span className="btn-icon">👁️</span>
                             View Details
                           </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Donations Management Section */}
+          <div className="content-section">
+            <div className="section-header">
+              <h2 className="section-title">Donations Management</h2>
+              <p className="section-subtitle">Manage medicine donations and schedule pickups</p>
+              <button 
+                onClick={loadDonations}
+                className="btn-secondary"
+                style={{marginTop: '0.5rem'}}
+              >
+                🔄 Reload Donations
+              </button>
+            </div>
+
+            {donationsLoading ? (
+              <div className="loading-state">
+                <div className="loading-spinner"></div>
+                <p>Loading donations...</p>
+              </div>
+            ) : donationsError ? (
+              <div className="error-state">
+                <div className="error-icon">❌</div>
+                <h4>Error loading donations</h4>
+                <p>{donationsError}</p>
+                <button 
+                  onClick={loadDonations}
+                  className="btn-primary"
+                  style={{marginTop: '1rem'}}
+                >
+                  🔄 Try Again
+                </button>
+              </div>
+            ) : donations.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-icon">📋</div>
+                <h4>No donations found</h4>
+                <p>Donations will appear here once users start submitting them!</p>
+              </div>
+            ) : (
+              <div className="donations-container">
+                <div className="donations-header">
+                  <h3>All Donations ({donations.length})</h3>
+                </div>
+                <div className="donations-grid">
+                  {donations.map((donation) => (
+                    <div key={donation.id} className="donation-card">
+                      <div className="donation-header">
+                        <div className="donation-info">
+                          <h4 className="donor-name">{donation.donor_name}</h4>
+                          <p className="donor-email">{donation.donor_email}</p>
+                          <p className="donor-phone">{donation.donor_phone}</p>
+                        </div>
+                        <div className="donation-status">
+                          <span 
+                            className={`status-badge status-${getDonationStatusColor(donation.status)}`}
+                          >
+                            {getDonationStatusIcon(donation.status)} {donation.status}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="donation-summary">
+                        <div className="donation-summary-row">
+                          <span className="summary-label">Address:</span>
+                          <span className="summary-value">{donation.donor_address}</span>
+                        </div>
+                        <div className="donation-summary-row">
+                          <span className="summary-label">Total Items:</span>
+                          <span className="summary-value">{donation.total_items}</span>
+                        </div>
+                        <div className="donation-summary-row">
+                          <span className="summary-label">Submitted:</span>
+                          <span className="summary-value">
+                            {new Date(donation.created_at).toLocaleDateString('en-IN', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric'
+                            })}
+                          </span>
+                        </div>
+                        {donation.message && (
+                          <div className="donation-summary-row">
+                            <span className="summary-label">Message:</span>
+                            <span className="summary-value">{donation.message}</span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="donation-footer">
+                        <div className="donation-actions">
+                          {donation.status === 'pending' && (
+                            <>
+                              <button 
+                                className="btn-primary btn-sm"
+                                onClick={() => updateDonationStatus(donation.id, 'approved')}
+                              >
+                                <span className="btn-icon">✅</span>
+                                Approve
+                              </button>
+                              <button 
+                                className="btn-secondary btn-sm"
+                                onClick={() => {
+                                  const notes = prompt('Enter rejection reason:');
+                                  if (notes !== null) {
+                                    updateDonationStatus(donation.id, 'rejected', notes);
+                                  }
+                                }}
+                              >
+                                <span className="btn-icon">❌</span>
+                                Reject
+                              </button>
+                            </>
+                          )}
+                          {donation.status === 'approved' && (
+                            <button 
+                              className="btn-primary btn-sm"
+                              onClick={() => updateDonationStatus(donation.id, 'collected')}
+                            >
+                              <span className="btn-icon">📦</span>
+                              Mark Collected
+                            </button>
+                          )}
+                          {donation.status === 'collected' && (
+                            <button 
+                              className="btn-primary btn-sm"
+                              onClick={() => updateDonationStatus(donation.id, 'completed')}
+                            >
+                              <span className="btn-icon">🎉</span>
+                              Mark Completed
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
