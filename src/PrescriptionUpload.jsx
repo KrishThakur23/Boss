@@ -5,6 +5,9 @@ import PrescriptionService from './services/prescriptionService';
 import Header from './Header';
 import Footer from './Footer';
 import './PrescriptionUpload.css';
+import OCRService from './services/ocrService';
+import ProductSearchService from './services/productSearchService';
+import { supabase } from './config/supabase';
 
 const PrescriptionUpload = () => {
   const navigate = useNavigate();
@@ -17,6 +20,9 @@ const PrescriptionUpload = () => {
   const [stockStatus, setStockStatus] = useState(null);
   const [submitMessage, setSubmitMessage] = useState('');
   const [errors, setErrors] = useState({});
+  const [ocrProgress, setOcrProgress] = useState(0);
+  const [isSearchingProducts, setIsSearchingProducts] = useState(false);
+  const [matchedProducts, setMatchedProducts] = useState([]);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -67,39 +73,150 @@ const PrescriptionUpload = () => {
 
     setIsProcessing(true);
     setErrors({});
+    setOcrProgress(0);
     
     try {
-      // Simulate ML processing and stock checking
-      console.log('Processing prescription with ML...');
+      console.log('🔍 Processing prescription with OCR...');
       
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      // Process the image with OCR
+      const { data: ocrData, error: ocrError } = await OCRService.processPrescriptionImage(prescriptionFile);
       
-      // Mock extracted data (in real app, this would come from ML API)
-      const mockExtractedData = {
-        medicines: [
-          { name: 'Paracetamol 500mg', dosage: '1 tablet 3 times daily', quantity: 30, inStock: true, price: 25 },
-          { name: 'Amoxicillin 250mg', dosage: '1 capsule twice daily', quantity: 20, inStock: true, price: 45 },
-          { name: 'Vitamin C 1000mg', dosage: '1 tablet daily', quantity: 60, inStock: false, price: 120 }
-        ],
-        patientName: 'John Doe',
-        doctorName: 'Dr. Smith',
-        prescriptionDate: '2025-01-15',
-        totalAmount: 190
+      if (ocrError) {
+        throw new Error(`OCR processing failed: ${ocrError.message}`);
+      }
+
+      console.log('📝 OCR Raw Text:', ocrData.rawText);
+      console.log('💊 Extracted Medicine Names:', ocrData.medicineNames);
+
+      if (!ocrData || !ocrData.medicineNames || ocrData.medicineNames.length === 0) {
+        throw new Error('No medicine names could be extracted from the prescription. Please ensure the image is clear and contains readable text.');
+      }
+
+      console.log('✅ OCR completed, searching for matching products...');
+      
+      // Search for matching products for each extracted medicine name
+      setIsSearchingProducts(true);
+      const allMatchedProducts = [];
+      
+      for (const medicineName of ocrData.medicineNames) {
+        console.log(`🔍 Searching for medicine: "${medicineName}"`);
+        const { data: products, error: searchError } = await ProductSearchService.fuzzySearch(medicineName);
+        
+        console.log(`📦 Search results for "${medicineName}":`, products);
+        console.log(`❌ Search error for "${medicineName}":`, searchError);
+        
+        if (!searchError && products && products.length > 0) {
+          // Add the medicine name that was searched for
+          const productsWithSearchTerm = products.map(product => ({
+            ...product,
+            searchedFor: medicineName,
+            matchScore: calculateMatchScore(medicineName, product.name)
+          }));
+          allMatchedProducts.push(...productsWithSearchTerm);
+        } else {
+          console.log(`⚠️ No products found for "${medicineName}"`);
+        }
+      }
+
+      console.log('🎯 All matched products:', allMatchedProducts);
+
+      // Remove duplicates and sort by match score
+      const uniqueProducts = removeDuplicateProducts(allMatchedProducts);
+      uniqueProducts.sort((a, b) => b.matchScore - a.matchScore);
+      
+      console.log('✨ Final unique products:', uniqueProducts);
+      
+      setMatchedProducts(uniqueProducts);
+
+      // Create extracted data structure
+      const extractedData = {
+        medicines: uniqueProducts.map(product => ({
+          id: product.id,
+          name: product.name,
+          dosage: product.dosage_form && product.strength ? 
+            `${product.strength} ${product.dosage_form}` : 
+            product.dosage_form || 'As prescribed',
+          quantity: 1, // Default quantity, can be adjusted by user
+          inStock: product.in_stock,
+          price: product.price,
+          mrp: product.mrp,
+          discount: product.discount_percentage,
+          manufacturer: product.manufacturer,
+          genericName: product.generic_name,
+          requiresPrescription: product.requires_prescription,
+          searchedFor: product.searchedFor,
+          matchScore: product.matchScore
+        })),
+        patientName: ocrData.patientInfo.patientName || 'Not detected',
+        doctorName: ocrData.patientInfo.doctorName || 'Not detected',
+        prescriptionDate: ocrData.patientInfo.prescriptionDate || 'Not detected',
+        rawText: ocrData.rawText,
+        confidence: ocrData.confidence,
+        totalAmount: uniqueProducts.reduce((sum, med) => sum + (med.price || 0), 0)
       };
       
-      setExtractedData(mockExtractedData);
+      setExtractedData(extractedData);
       
       // Check stock status
-      const stockCheck = mockExtractedData.medicines.every(med => med.inStock);
+      const stockCheck = extractedData.medicines.every(med => med.inStock);
       setStockStatus(stockCheck ? 'available' : 'partial');
       
+      console.log('✅ Prescription processing completed successfully');
+      
     } catch (error) {
-      console.error('Prescription processing error:', error);
-      setErrors(prev => ({ ...prev, processing: 'Failed to process prescription. Please try again.' }));
+      console.error('❌ Prescription processing error:', error);
+      setErrors(prev => ({ ...prev, processing: error.message || 'Failed to process prescription. Please try again.' }));
     } finally {
       setIsProcessing(false);
+      setIsSearchingProducts(false);
+      setOcrProgress(0);
     }
+  };
+
+  const calculateMatchScore = (searchTerm, productName) => {
+    const searchLower = searchTerm.toLowerCase();
+    const productLower = productName.toLowerCase();
+    
+    // Exact match gets highest score
+    if (productLower === searchLower) return 100;
+    
+    // Product name contains the exact search term
+    if (productLower.includes(searchLower)) return 85;
+    
+    // Product name starts with search term
+    if (productLower.startsWith(searchLower)) return 80;
+    
+    // Check for word matches (for compound names)
+    const searchWords = searchLower.split(/\s+/);
+    const productWords = productLower.split(/\s+/);
+    
+    let wordMatches = 0;
+    searchWords.forEach(searchWord => {
+      if (productWords.some(productWord => productWord === searchWord)) {
+        wordMatches++;
+      }
+    });
+    
+    if (wordMatches > 0) {
+      return Math.min(70, wordMatches * 25);
+    }
+    
+    // Partial word match
+    if (productWords.some(word => word.includes(searchLower))) return 50;
+    
+    return 0;
+  };
+
+  const removeDuplicateProducts = (products) => {
+    const seen = new Set();
+    return products.filter(product => {
+      const key = product.id;
+      if (seen.has(key)) {
+        return false;
+      }
+      seen.add(key);
+      return true;
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -154,6 +271,40 @@ const PrescriptionUpload = () => {
       const file = files[0];
       const event = { target: { files: [file] } };
       handleFileChange(event);
+    }
+  };
+
+  // Test function to verify product search is working
+  const testProductSearch = async () => {
+    console.log('🧪 Testing product search...');
+    
+    try {
+      // Test search for metformin
+      const { data: metforminResults, error: metforminError } = await ProductSearchService.fuzzySearch('metformin');
+      console.log('🔍 Metformin search results:', metforminResults);
+      console.log('❌ Metformin search error:', metforminError);
+      
+      // Test search for paracetamol
+      const { data: paracetamolResults, error: paracetamolError } = await ProductSearchService.fuzzySearch('paracetamol');
+      console.log('🔍 Paracetamol search results:', paracetamolResults);
+      console.log('❌ Paracetamol search error:', paracetamolError);
+      
+      // Test direct database query
+      const { data: allProducts, error: allProductsError } = await ProductSearchService.searchProductsByName('metformin');
+      console.log('📦 All products search results:', allProducts);
+      console.log('❌ All products search error:', allProductsError);
+      
+      // Test direct Supabase query to see what's in the table
+      const { data: directQuery, error: directError } = await supabase
+        .from('products')
+        .select('id, name, price, in_stock')
+        .limit(5);
+      
+      console.log('🔍 Direct Supabase query results:', directQuery);
+      console.log('❌ Direct Supabase query error:', directError);
+      
+    } catch (error) {
+      console.error('❌ Test failed:', error);
     }
   };
 
@@ -255,16 +406,34 @@ const PrescriptionUpload = () => {
                     <span className="error-message">{errors.prescriptionFile}</span>
                   )}
                   
-                  {prescriptionFile && (
-                    <button 
-                      type="button"
-                      className="process-prescription-btn"
-                      onClick={processPrescription}
-                      disabled={isProcessing}
-                    >
-                      {isProcessing ? 'Processing...' : '🔍 Process with AI'}
-                    </button>
-                  )}
+                                     {prescriptionFile && (
+                     <button 
+                       type="button"
+                       className="process-prescription-btn"
+                       onClick={processPrescription}
+                       disabled={isProcessing}
+                     >
+                       {isProcessing ? 'Processing...' : '🔍 Process with AI'}
+                     </button>
+                   )}
+                   
+                   <button 
+                     type="button"
+                     className="test-search-btn"
+                     onClick={testProductSearch}
+                     style={{
+                       marginTop: '1rem',
+                       padding: '0.5rem 1rem',
+                       backgroundColor: '#28a745',
+                       color: 'white',
+                       border: 'none',
+                       borderRadius: '6px',
+                       fontSize: '0.9rem',
+                       cursor: 'pointer'
+                     }}
+                   >
+                     🧪 Test Product Search
+                   </button>
                 </div>
 
                 {extractedData && (

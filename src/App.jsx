@@ -32,6 +32,7 @@ import Addresses from './Addresses';
 import Checkout from './Checkout';
 import OrderSuccess from './OrderSuccess';
 import MyOrders from './MyOrders';
+import OCRTest from './components/OCRTest';
 
 import './App.css';
 
@@ -77,6 +78,7 @@ function App() {
                                  <Route path="/checkout" element={<Checkout />} />
                  <Route path="/order-success" element={<OrderSuccess />} />
                  <Route path="/my-orders" element={<MyOrders />} />
+                 <Route path="/ocr-test" element={<OCRTest />} />
               </Routes>
             </main>
             <Footer />

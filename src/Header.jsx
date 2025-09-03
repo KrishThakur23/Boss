@@ -114,6 +114,11 @@ const Header = forwardRef(({ isSearchActive, currentSearchTerm = 'medicines' }, 
     };
   }, [isUserMenuOpen, showUserDropdown]);
 
+  // Close dropdown when route changes
+  useEffect(() => {
+    setShowUserDropdown(false);
+  }, [window.location.pathname]);
+
   // Handle sign out and redirect to sign in page
   const handleSignOut = async () => {
     try {
@@ -204,7 +209,7 @@ const Header = forwardRef(({ isSearchActive, currentSearchTerm = 'medicines' }, 
         </div>
 
         {isAuthenticated ? (
-          <div className="user-section">
+          <div className="user-section" ref={userMenuRef}>
             <button className="header-btn btn-user" onClick={toggleUserDropdown}>
               <svg className="btn-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                 {/* User/account icon */}

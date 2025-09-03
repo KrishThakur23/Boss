@@ -201,6 +201,37 @@
   opacity: 0.3;
 }
 
+/* Edit Toggle Button */
+.edit-toggle-btn {
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.edit-toggle-btn:hover {
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+}
+
+.edit-toggle-btn.editing {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+}
+
+.edit-toggle-btn.editing:hover {
+  background: linear-gradient(135deg, #b91c1c, #991b1b);
+}
+
 .section-edit-btn {
   background: linear-gradient(135deg, #3b82f6, #8b5cf6);
   color: white;
@@ -849,6 +880,48 @@
 .profile-field.editable-field::placeholder {
   color: #9ca3af;
   font-style: italic;
+}
+
+/* Readonly Field Styles */
+.profile-field.readonly-field {
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  cursor: not-allowed;
+  position: relative;
+  color: #6b7280;
+  opacity: 0.8;
+}
+
+.profile-field.readonly-field:hover {
+  border-color: #cbd5e1;
+  transform: none;
+}
+
+.profile-field.readonly-field:focus {
+  outline: none;
+  border-color: #cbd5e1;
+  box-shadow: none;
+  transform: none;
+  background: #f8fafc;
+}
+
+.profile-field.readonly-field::placeholder {
+  color: #9ca3af;
+  font-style: italic;
+  opacity: 0.6;
+}
+
+/* Field Note Styling */
+.field-note {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-style: italic;
+  margin-top: 4px;
+  opacity: 0.8;
 }
 
 /* Email note styling */
