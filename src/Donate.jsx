@@ -303,8 +303,7 @@ const Donate = () => {
                   <div 
                     key={product.id} 
                     className="product-card"
-                    onClick={() => navigate(`/product/${product.id}`)}
-                    style={{ cursor: 'pointer' }}
+                    style={{ cursor: 'default' }}
                   >
                     <div className="product-image">
                       {product.image_urls && product.image_urls.length > 0 ? (
@@ -335,9 +334,12 @@ const Donate = () => {
 
                       <button
                         className="donate-btn"
-                        onClick={() => addToDonation(product)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          addToDonation(product);
+                        }}
                       >
-                        Add to Donation
+                        + Add to Donation
                       </button>
                     </div>
                   </div>

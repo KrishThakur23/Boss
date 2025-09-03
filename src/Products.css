@@ -526,7 +526,8 @@
 
 .product-image {
   position: relative;
-  height: 80px !important;
+  width: 100%;
+  aspect-ratio: 1 / 1; /* This makes it square */
   overflow: hidden;
   background: linear-gradient(135deg, #f8fafc, #f1f5f9);
   display: flex !important;

@@ -301,6 +301,10 @@ const Header = forwardRef(({ isSearchActive, currentSearchTerm = 'medicines' }, 
                 Admin Dashboard
               </Link>
             )}
+            <Link to="/database-debug" className="mobile-nav-link" onClick={() => setIsMobileNavOpen(false)}>
+              <span className="mobile-icon">🔍</span>
+              Debug Search
+            </Link>
             <button 
               onClick={handleSignOut}
               className="mobile-signout-btn"

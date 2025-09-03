@@ -1,107 +1,165 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { supabase } from '../config/supabase';
-import ProductService from '../services/productService';
-import MedicineService from '../services/medicineService';
+import ProductSearchService from '../services/productSearchService';
 
 const DatabaseDebug = () => {
-  const [results, setResults] = useState({
-    products: { data: null, error: null, loading: true },
-    medicines: { data: null, error: null, loading: true }
-  });
+  const [searchTerm, setSearchTerm] = useState('');
+  const [results, setResults] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [allProducts, setAllProducts] = useState(null);
 
-  useEffect(() => {
-    checkBothTables();
-  }, []);
-
-  const checkBothTables = async () => {
-    // Check products table
+  const testSimpleSearch = async () => {
+    setLoading(true);
+    setError(null);
+    setResults(null);
+    
     try {
-      const productResult = await ProductService.getProducts({ limit: 10 });
-      setResults(prev => ({
-        ...prev,
-        products: { 
-          data: productResult.data, 
-          error: productResult.error, 
-          loading: false 
-        }
-      }));
-    } catch (error) {
-      setResults(prev => ({
-        ...prev,
-        products: { 
-          data: null, 
-          error: error.message, 
-          loading: false 
-        }
-      }));
-    }
-
-    // Check medicines table
-    try {
-      const medicineResult = await MedicineService.getAllMedicines();
-      setResults(prev => ({
-        ...prev,
-        medicines: { 
-          data: medicineResult.data, 
-          error: medicineResult.error, 
-          loading: false 
-        }
-      }));
-    } catch (error) {
-      setResults(prev => ({
-        ...prev,
-        medicines: { 
-          data: null, 
-          error: error.message, 
-          loading: false 
-        }
-      }));
+      console.log('🧪 Testing simple search for:', searchTerm);
+      
+      // Test 1: Direct Supabase query
+      const { data: directResults, error: directError } = await supabase
+        .from('products')
+        .select('id, name, price, in_stock, generic_name')
+        .or(`name.ilike.%${searchTerm}%,generic_name.ilike.%${searchTerm}%`)
+        .eq('is_active', true)
+        .limit(5);
+      
+      if (directError) {
+        console.error('❌ Direct Supabase query failed:', directError);
+        setError(`Direct query failed: ${directError.message}`);
+        return;
+      }
+      
+      console.log('✅ Direct Supabase results:', directResults);
+      
+      // Test 2: ProductSearchService search
+      const { data: serviceResults, error: serviceError } = await ProductSearchService.searchProductsByName(searchTerm);
+      
+      if (serviceError) {
+        console.error('❌ ProductSearchService failed:', serviceError);
+        setError(`Service search failed: ${serviceError.message}`);
+        return;
+      }
+      
+      console.log('✅ ProductSearchService results:', serviceResults);
+      
+      // Test 3: Check all products
+      const { data: allProductsData, error: allProductsError } = await supabase
+        .from('products')
+        .select('id, name, price, in_stock')
+        .eq('is_active', true)
+        .limit(10);
+      
+      if (allProductsError) {
+        console.error('❌ Failed to get all products:', allProductsError);
+      } else {
+        console.log('✅ All products sample:', allProductsData);
+        setAllProducts(allProductsData);
+      }
+      
+      setResults({
+        direct: directResults,
+        service: serviceResults,
+        searchTerm
+      });
+      
+    } catch (err) {
+      console.error('❌ Test failed:', err);
+      setError(`Test failed: ${err.message}`);
+    } finally {
+      setLoading(false);
     }
   };
 
+  const testMetforminSearch = () => {
+    setSearchTerm('Metformin');
+    setTimeout(() => testSimpleSearch(), 100);
+  };
+
   return (
-    <div style={{ padding: '20px', border: '2px solid blue', margin: '20px' }}>
-      <h2>🔍 Database Debug Info</h2>
+    <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
+      <h2>🔍 Database Search Debug</h2>
       
       <div style={{ marginBottom: '20px' }}>
-        <h3>Products Table:</h3>
-        {results.products.loading ? (
-          <p>Loading...</p>
-        ) : results.products.error ? (
-          <p style={{ color: 'red' }}>Error: {results.products.error}</p>
-        ) : (
-          <div>
-            <p style={{ color: 'green' }}>✅ Found {results.products.data?.length || 0} products</p>
-            {results.products.data?.slice(0, 3).map(product => (
-              <div key={product.id} style={{ marginLeft: '20px' }}>
-                • {product.name} - ₹{product.price}
-              </div>
-            ))}
-          </div>
-        )}
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Enter search term..."
+          style={{ padding: '8px', marginRight: '10px', width: '200px' }}
+        />
+        <button 
+          onClick={testSimpleSearch}
+          disabled={loading || !searchTerm}
+          style={{ padding: '8px 16px', marginRight: '10px' }}
+        >
+          {loading ? 'Searching...' : 'Search'}
+        </button>
+        <button 
+          onClick={testMetforminSearch}
+          style={{ padding: '8px 16px', backgroundColor: '#28a745', color: 'white', border: 'none' }}
+        >
+          Test Metformin
+        </button>
       </div>
 
-      <div>
-        <h3>Medicines Table:</h3>
-        {results.medicines.loading ? (
-          <p>Loading...</p>
-        ) : results.medicines.error ? (
-          <p style={{ color: 'red' }}>Error: {results.medicines.error}</p>
-        ) : (
-          <div>
-            <p style={{ color: 'green' }}>✅ Found {results.medicines.data?.length || 0} medicines</p>
-            {results.medicines.data?.slice(0, 3).map(medicine => (
-              <div key={medicine.id} style={{ marginLeft: '20px' }}>
-                • {medicine.name} - ₹{medicine.price}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      {error && (
+        <div style={{ color: 'red', marginBottom: '20px' }}>
+          ❌ Error: {error}
+        </div>
+      )}
 
-      <button onClick={checkBothTables} style={{ marginTop: '10px' }}>
-        🔄 Refresh Check
-      </button>
+      {results && (
+        <div style={{ marginBottom: '20px' }}>
+          <h3>Search Results for "{results.searchTerm}"</h3>
+          
+          <div style={{ marginBottom: '15px' }}>
+            <h4>Direct Supabase Query Results ({results.direct?.length || 0}):</h4>
+            {results.direct && results.direct.length > 0 ? (
+              <ul>
+                {results.direct.map(product => (
+                  <li key={product.id}>
+                    {product.name} - ${product.price} - {product.in_stock ? 'In Stock' : 'Out of Stock'}
+                    {product.generic_name && ` (Generic: ${product.generic_name})`}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>No results found</p>
+            )}
+          </div>
+          
+          <div style={{ marginBottom: '15px' }}>
+            <h4>ProductSearchService Results ({results.service?.length || 0}):</h4>
+            {results.service && results.service.length > 0 ? (
+              <ul>
+                {results.service.map(product => (
+                  <li key={product.id}>
+                    {product.name} - ${product.price} - {product.in_stock ? 'In Stock' : 'Out of Stock'}
+                    {product.generic_name && ` (Generic: ${product.generic_name})`}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>No results found</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {allProducts && (
+        <div>
+          <h3>Sample of All Products ({allProducts.length}):</h3>
+          <ul>
+            {allProducts.map(product => (
+              <li key={product.id}>
+                {product.name} - ${product.price} - {product.in_stock ? 'In Stock' : 'Out of Stock'}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 };

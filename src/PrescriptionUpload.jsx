@@ -7,6 +7,11 @@ import Footer from './Footer';
 import './PrescriptionUpload.css';
 import OCRService from './services/ocrService';
 import ProductSearchService from './services/productSearchService';
+import PrescriptionMatchingService from './services/prescriptionMatchingService';
+import PrescriptionCartService from './services/prescriptionCartService';
+import ErrorHandlingService from './services/errorHandlingService';
+import ErrorBoundary from './components/ErrorBoundary';
+import { ErrorMessage, SuccessMessage, WarningMessage } from './components/UserFeedback';
 import { supabase } from './config/supabase';
 
 const PrescriptionUpload = () => {
@@ -17,12 +22,16 @@ const PrescriptionUpload = () => {
   const [prescriptionFile, setPrescriptionFile] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [extractedData, setExtractedData] = useState(null);
+  const [matchingResults, setMatchingResults] = useState(null);
   const [stockStatus, setStockStatus] = useState(null);
   const [submitMessage, setSubmitMessage] = useState('');
   const [errors, setErrors] = useState({});
   const [ocrProgress, setOcrProgress] = useState(0);
   const [isSearchingProducts, setIsSearchingProducts] = useState(false);
   const [matchedProducts, setMatchedProducts] = useState([]);
+  const [cartOperations, setCartOperations] = useState({});
+  const [selectedItems, setSelectedItems] = useState(new Set());
+  const [feedbackMessages, setFeedbackMessages] = useState([]);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -61,6 +70,7 @@ const PrescriptionUpload = () => {
       
       // Clear previous data
       setExtractedData(null);
+      setMatchingResults(null);
       setStockStatus(null);
     }
   };
@@ -92,80 +102,91 @@ const PrescriptionUpload = () => {
         throw new Error('No medicine names could be extracted from the prescription. Please ensure the image is clear and contains readable text.');
       }
 
-      console.log('✅ OCR completed, searching for matching products...');
+      console.log('✅ OCR completed, processing with intelligent matching...');
       
-      // Search for matching products for each extracted medicine name
+      // Use the new prescription matching service
       setIsSearchingProducts(true);
-      const allMatchedProducts = [];
+      const { data: matchingData, error: matchingError } = await PrescriptionMatchingService.processOCRResults(ocrData);
       
-      for (const medicineName of ocrData.medicineNames) {
-        console.log(`🔍 Searching for medicine: "${medicineName}"`);
-        const { data: products, error: searchError } = await ProductSearchService.fuzzySearch(medicineName);
-        
-        console.log(`📦 Search results for "${medicineName}":`, products);
-        console.log(`❌ Search error for "${medicineName}":`, searchError);
-        
-        if (!searchError && products && products.length > 0) {
-          // Add the medicine name that was searched for
-          const productsWithSearchTerm = products.map(product => ({
-            ...product,
-            searchedFor: medicineName,
-            matchScore: calculateMatchScore(medicineName, product.name)
-          }));
-          allMatchedProducts.push(...productsWithSearchTerm);
-        } else {
-          console.log(`⚠️ No products found for "${medicineName}"`);
-        }
+      if (matchingError) {
+        throw new Error(`Medicine matching failed: ${matchingError.message}`);
       }
 
-      console.log('🎯 All matched products:', allMatchedProducts);
+      if (!matchingData) {
+        throw new Error('No matching data returned from prescription matching service');
+      }
 
-      // Remove duplicates and sort by match score
-      const uniqueProducts = removeDuplicateProducts(allMatchedProducts);
-      uniqueProducts.sort((a, b) => b.matchScore - a.matchScore);
-      
-      console.log('✨ Final unique products:', uniqueProducts);
-      
-      setMatchedProducts(uniqueProducts);
+      console.log('🎯 Matching results:', matchingData);
+      setMatchingResults(matchingData);
 
-      // Create extracted data structure
+      // Create extracted data structure for backward compatibility
       const extractedData = {
-        medicines: uniqueProducts.map(product => ({
-          id: product.id,
-          name: product.name,
-          dosage: product.dosage_form && product.strength ? 
-            `${product.strength} ${product.dosage_form}` : 
-            product.dosage_form || 'As prescribed',
+        medicines: (matchingData.matchedMedicines || []).map(match => ({
+          id: match.bestMatch?.id || 'unknown',
+          name: match.bestMatch?.name || match.originalName || 'Unknown Medicine',
+          originalName: match.originalName || 'Unknown',
+          dosage: match.dosage || match.bestMatch?.dosageForm || 'As prescribed',
           quantity: 1, // Default quantity, can be adjusted by user
-          inStock: product.in_stock,
-          price: product.price,
-          mrp: product.mrp,
-          discount: product.discount_percentage,
-          manufacturer: product.manufacturer,
-          genericName: product.generic_name,
-          requiresPrescription: product.requires_prescription,
-          searchedFor: product.searchedFor,
-          matchScore: product.matchScore
+          inStock: match.bestMatch?.inStock || false,
+          price: match.bestMatch?.price || 0,
+          mrp: match.bestMatch?.mrp || 0,
+          discount: match.bestMatch?.discountPercentage || 0,
+          manufacturer: match.bestMatch?.manufacturer || 'Unknown',
+          genericName: match.bestMatch?.genericName || '',
+          requiresPrescription: match.bestMatch?.requiresPrescription || false,
+          matchScore: match.bestMatch?.relevanceScore || 0,
+          confidence: match.confidence || 0
         })),
-        patientName: ocrData.patientInfo.patientName || 'Not detected',
-        doctorName: ocrData.patientInfo.doctorName || 'Not detected',
-        prescriptionDate: ocrData.patientInfo.prescriptionDate || 'Not detected',
-        rawText: ocrData.rawText,
-        confidence: ocrData.confidence,
-        totalAmount: uniqueProducts.reduce((sum, med) => sum + (med.price || 0), 0)
+        unmatchedMedicines: (matchingData.unmatchedMedicines || []).map(unmatched => ({
+          ...unmatched,
+          suggestions: unmatched.suggestions || [],
+          suggestedAlternatives: unmatched.suggestedAlternatives || []
+        })),
+        patientName: matchingData.originalOCRData?.patientInfo?.patientName || 'Not detected',
+        doctorName: matchingData.originalOCRData?.patientInfo?.doctorName || 'Not detected',
+        prescriptionDate: matchingData.originalOCRData?.patientInfo?.prescriptionDate || 'Not detected',
+        rawText: matchingData.originalOCRData?.rawText || '',
+        confidence: matchingData.confidence || 0,
+        summary: matchingData.summary || {
+          totalMedicines: 0,
+          matchedCount: 0,
+          matchRate: 0,
+          availability: { inStock: 0, outOfStock: 0, availabilityRate: 0 },
+          estimatedCost: { total: 0, currency: 'INR' }
+        },
+        totalAmount: matchingData.summary?.estimatedCost?.total || 0
       };
       
       setExtractedData(extractedData);
       
       // Check stock status
-      const stockCheck = extractedData.medicines.every(med => med.inStock);
+      const stockCheck = matchingData.summary.availability.availabilityRate === 100;
       setStockStatus(stockCheck ? 'available' : 'partial');
       
       console.log('✅ Prescription processing completed successfully');
       
     } catch (error) {
       console.error('❌ Prescription processing error:', error);
-      setErrors(prev => ({ ...prev, processing: error.message || 'Failed to process prescription. Please try again.' }));
+      
+      // Use error handling service to get user-friendly error info
+      let errorInfo;
+      if (error.message.includes('OCR') || error.message.includes('text extraction')) {
+        errorInfo = ErrorHandlingService.handleOCRError(error, { prescriptionFile: prescriptionFile.name });
+      } else if (error.message.includes('matching') || error.message.includes('search')) {
+        errorInfo = ErrorHandlingService.handleMatchingError(error, { ocrData });
+      } else {
+        errorInfo = ErrorHandlingService.handleGeneralError(error, { step: 'prescription_processing' });
+      }
+      
+      // Add error message to feedback
+      setFeedbackMessages(prev => [...prev, {
+        id: Date.now(),
+        type: 'error',
+        ...ErrorHandlingService.getErrorMessageProps(errorInfo),
+        onRetry: errorInfo.retryable ? () => processPrescription() : null
+      }]);
+      
+      setErrors(prev => ({ ...prev, processing: errorInfo.userMessage }));
     } finally {
       setIsProcessing(false);
       setIsSearchingProducts(false);
@@ -247,7 +268,9 @@ const PrescriptionUpload = () => {
       // Reset form
       setPrescriptionFile(null);
       setExtractedData(null);
+      setMatchingResults(null);
       setStockStatus(null);
+      setMatchedProducts([]);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -308,14 +331,204 @@ const PrescriptionUpload = () => {
     }
   };
 
+  const handleAddToCart = async (medicine, quantity = 1) => {
+    const medicineKey = medicine.id;
+    setCartOperations(prev => ({ ...prev, [medicineKey]: 'adding' }));
+    
+    try {
+      const prescriptionItem = {
+        id: medicine.id,
+        name: medicine.name,
+        originalName: medicine.originalName,
+        price: medicine.price,
+        quantity: quantity,
+        dosage: medicine.dosage,
+        requiresPrescription: medicine.requiresPrescription,
+        matchScore: medicine.matchScore,
+        confidence: medicine.confidence
+      };
+
+      const { data: cartResult, error: cartError } = await PrescriptionCartService.addPrescriptionItemsToCart(
+        [prescriptionItem],
+        matchingResults?.prescriptionId
+      );
+
+      if (cartError) {
+        throw new Error(cartError.message);
+      }
+
+      if (cartResult.errors && cartResult.errors.length > 0) {
+        throw new Error(cartResult.errors[0].error);
+      }
+
+      setCartOperations(prev => ({ ...prev, [medicineKey]: 'success' }));
+      
+      // Show success message
+      setFeedbackMessages(prev => [...prev, {
+        id: Date.now(),
+        type: 'success',
+        title: 'Added to Cart',
+        message: `${medicine.name} has been added to your cart successfully.`,
+        autoHide: true
+      }]);
+      
+      // Show success message briefly
+      setTimeout(() => {
+        setCartOperations(prev => {
+          const newState = { ...prev };
+          delete newState[medicineKey];
+          return newState;
+        });
+      }, 2000);
+
+    } catch (error) {
+      console.error('❌ Failed to add medicine to cart:', error);
+      setCartOperations(prev => ({ ...prev, [medicineKey]: 'error' }));
+      
+      // Handle cart error with error service
+      const errorInfo = ErrorHandlingService.handleCartError(error, { 
+        medicine: medicine.name,
+        quantity 
+      });
+      
+      setFeedbackMessages(prev => [...prev, {
+        id: Date.now(),
+        type: 'error',
+        ...ErrorHandlingService.getErrorMessageProps(errorInfo),
+        onRetry: errorInfo.retryable ? () => handleAddToCart(medicine, quantity) : null
+      }]);
+      
+      // Clear error state after 3 seconds
+      setTimeout(() => {
+        setCartOperations(prev => {
+          const newState = { ...prev };
+          delete newState[medicineKey];
+          return newState;
+        });
+      }, 3000);
+    }
+  };
+
+  const handleAddAllToCart = async () => {
+    if (!extractedData || !extractedData.medicines || !extractedData.medicines.length) return;
+    
+    setCartOperations(prev => ({ ...prev, 'all': 'adding' }));
+    
+    try {
+      const prescriptionItems = (extractedData.medicines || [])
+        .filter(medicine => medicine.inStock)
+        .map(medicine => ({
+          id: medicine.id,
+          name: medicine.name,
+          originalName: medicine.originalName,
+          price: medicine.price,
+          quantity: 1,
+          dosage: medicine.dosage,
+          requiresPrescription: medicine.requiresPrescription,
+          matchScore: medicine.matchScore,
+          confidence: medicine.confidence
+        }));
+
+      if (prescriptionItems.length === 0) {
+        throw new Error('No in-stock medicines to add to cart');
+      }
+
+      const { data: cartResult, error: cartError } = await PrescriptionCartService.addPrescriptionItemsToCart(
+        prescriptionItems,
+        matchingResults?.prescriptionId
+      );
+
+      if (cartError) {
+        throw new Error(cartError.message);
+      }
+
+      setCartOperations(prev => ({ ...prev, 'all': 'success' }));
+      
+      // Show success message
+      setTimeout(() => {
+        setCartOperations(prev => {
+          const newState = { ...prev };
+          delete newState['all'];
+          return newState;
+        });
+      }, 3000);
+
+    } catch (error) {
+      console.error('❌ Failed to add medicines to cart:', error);
+      setCartOperations(prev => ({ ...prev, 'all': 'error' }));
+      
+      setTimeout(() => {
+        setCartOperations(prev => {
+          const newState = { ...prev };
+          delete newState['all'];
+          return newState;
+        });
+      }, 3000);
+    }
+  };
+
+  const handleQuantityChange = (medicineId, newQuantity) => {
+    if (newQuantity < 1 || newQuantity > 10) return;
+    
+    setExtractedData(prev => ({
+      ...prev,
+      medicines: (prev.medicines || []).map(medicine => 
+        medicine.id === medicineId 
+          ? { ...medicine, quantity: newQuantity }
+          : medicine
+      )
+    }));
+  };
+
+  const dismissFeedbackMessage = (messageId) => {
+    setFeedbackMessages(prev => prev.filter(msg => msg.id !== messageId));
+  };
+
+  const clearAllFeedbackMessages = () => {
+    setFeedbackMessages([]);
+  };
+
   if (!isAuthenticated) {
     return null; // Will redirect to signin
   }
 
   return (
-    <div className="prescription-upload-container">
-      <Header />
-      <div className="prescription-upload-content">
+    <ErrorBoundary>
+      <div className="prescription-upload-container">
+        <Header />
+        <div className="prescription-upload-content">
+          
+          {/* Feedback Messages */}
+          {feedbackMessages.length > 0 && (
+            <div className="feedback-messages">
+              {feedbackMessages.map(message => {
+                const FeedbackComponent = message.type === 'success' ? SuccessMessage :
+                                        message.type === 'warning' ? WarningMessage :
+                                        ErrorMessage;
+                
+                return (
+                  <FeedbackComponent
+                    key={message.id}
+                    title={message.title}
+                    message={message.message}
+                    suggestions={message.suggestions}
+                    onRetry={message.onRetry}
+                    onDismiss={() => dismissFeedbackMessage(message.id)}
+                    technicalDetails={message.technicalDetails}
+                    autoHide={message.autoHide}
+                  />
+                );
+              })}
+              {feedbackMessages.length > 1 && (
+                <button 
+                  className="clear-all-messages"
+                  onClick={clearAllFeedbackMessages}
+                >
+                  Clear All Messages
+                </button>
+              )}
+            </div>
+          )}
         <div className="upload-hero">
           <h1>AI-Powered Prescription Processing</h1>
           <p>Just upload your prescription and our AI will handle the rest!</p>
@@ -417,6 +630,13 @@ const PrescriptionUpload = () => {
                      </button>
                    )}
                    
+                   {isSearchingProducts && (
+                     <div className="processing-indicator">
+                       <div className="spinner"></div>
+                       <span>Processing prescription and matching medicines...</span>
+                     </div>
+                   )}
+                   
                    <button 
                      type="button"
                      className="test-search-btn"
@@ -441,34 +661,174 @@ const PrescriptionUpload = () => {
                     <h3>AI Extracted Information</h3>
                     <div className="extracted-info">
                       <div className="patient-info">
-                        <p><strong>Patient:</strong> {extractedData.patientName}</p>
-                        <p><strong>Doctor:</strong> {extractedData.doctorName}</p>
-                        <p><strong>Date:</strong> {extractedData.prescriptionDate}</p>
+                        <p><strong>Patient:</strong> {extractedData.patientName || 'Not detected'}</p>
+                        <p><strong>Doctor:</strong> {extractedData.doctorName || 'Not detected'}</p>
+                        <p><strong>Date:</strong> {extractedData.prescriptionDate || 'Not detected'}</p>
+                        <p><strong>Processing Confidence:</strong> {extractedData.confidence || 0}%</p>
                       </div>
                       
-                      <div className="medicines-list">
-                        <h4>Medicines Detected:</h4>
-                        {extractedData.medicines.map((medicine, index) => (
-                          <div key={index} className={`medicine-item ${medicine.inStock ? 'in-stock' : 'out-of-stock'}`}>
-                            <div className="medicine-details">
-                              <h5>{medicine.name}</h5>
-                              <p>{medicine.dosage}</p>
-                              <p>Quantity: {medicine.quantity}</p>
+                      {/* Matching Summary */}
+                      {extractedData.summary && (
+                        <div className="matching-summary">
+                          <h4>Matching Summary</h4>
+                          <div className="summary-stats">
+                            <div className="stat-item">
+                              <span className="stat-label">Medicines Found:</span>
+                              <span className="stat-value">{extractedData.summary.matchedCount} of {extractedData.summary.totalMedicines}</span>
                             </div>
-                            <div className="medicine-status">
-                              <span className={`stock-badge ${medicine.inStock ? 'available' : 'unavailable'}`}>
-                                {medicine.inStock ? '✅ In Stock' : '❌ Out of Stock'}
-                              </span>
-                              <p className="price">₹{medicine.price}</p>
+                            <div className="stat-item">
+                              <span className="stat-label">Match Rate:</span>
+                              <span className="stat-value">{extractedData.summary.matchRate}%</span>
+                            </div>
+                            <div className="stat-item">
+                              <span className="stat-label">Available in Stock:</span>
+                              <span className="stat-value">{extractedData.summary.availability.inStock} of {extractedData.summary.matchedCount}</span>
                             </div>
                           </div>
-                        ))}
-                      </div>
+                        </div>
+                      )}
+                      
+                      {/* Available Medicines */}
+                      {extractedData.medicines && extractedData.medicines.length > 0 && (
+                        <div className="medicines-list">
+                          <h4>✅ Available Medicines ({extractedData.medicines.length})</h4>
+                          {extractedData.medicines.map((medicine, index) => (
+                            <div key={index} className={`medicine-item ${medicine.inStock ? 'in-stock' : 'out-of-stock'}`}>
+                              <div className="medicine-details">
+                                <h5>{medicine.name}</h5>
+                                {medicine.originalName !== medicine.name && (
+                                  <p className="original-name">Originally: "{medicine.originalName}"</p>
+                                )}
+                                <p className="dosage">{medicine.dosage}</p>
+                                <p className="manufacturer">By {medicine.manufacturer}</p>
+                                {medicine.genericName && (
+                                  <p className="generic-name">Generic: {medicine.genericName}</p>
+                                )}
+                                <div className="match-info">
+                                  <span className="match-score">Match: {medicine.matchScore}%</span>
+                                  <span className="confidence">Confidence: {medicine.confidence}%</span>
+                                </div>
+                              </div>
+                              <div className="medicine-status">
+                                <span className={`stock-badge ${medicine.inStock ? 'available' : 'unavailable'}`}>
+                                  {medicine.inStock ? '✅ In Stock' : '❌ Out of Stock'}
+                                </span>
+                                <div className="price-info">
+                                  <p className="price">₹{medicine.price}</p>
+                                  {medicine.mrp && medicine.mrp > medicine.price && (
+                                    <p className="mrp">MRP: ₹{medicine.mrp}</p>
+                                  )}
+                                  {medicine.discount > 0 && (
+                                    <p className="discount">{medicine.discount}% OFF</p>
+                                  )}
+                                </div>
+                                {medicine.requiresPrescription && (
+                                  <span className="prescription-required">📋 Prescription Required</span>
+                                )}
+                              </div>
+                              <div className="medicine-actions">
+                                <div className="quantity-selector">
+                                  <label>Qty:</label>
+                                  <button 
+                                    type="button"
+                                    onClick={() => handleQuantityChange(medicine.id, medicine.quantity - 1)}
+                                    disabled={medicine.quantity <= 1}
+                                    className="qty-btn"
+                                  >
+                                    -
+                                  </button>
+                                  <span className="quantity">{medicine.quantity}</span>
+                                  <button 
+                                    type="button"
+                                    onClick={() => handleQuantityChange(medicine.id, medicine.quantity + 1)}
+                                    disabled={medicine.quantity >= 10}
+                                    className="qty-btn"
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                                <button
+                                  type="button"
+                                  className={`add-to-cart-btn ${cartOperations[medicine.id] || ''}`}
+                                  onClick={() => handleAddToCart(medicine, medicine.quantity)}
+                                  disabled={!medicine.inStock || cartOperations[medicine.id] === 'adding'}
+                                >
+                                  {cartOperations[medicine.id] === 'adding' && '⏳ Adding...'}
+                                  {cartOperations[medicine.id] === 'success' && '✅ Added!'}
+                                  {cartOperations[medicine.id] === 'error' && '❌ Error'}
+                                  {!cartOperations[medicine.id] && (medicine.inStock ? '🛒 Add to Cart' : '❌ Out of Stock')}
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                          
+                          {extractedData.medicines.filter(m => m.inStock).length > 0 && (
+                            <div className="bulk-actions">
+                              <button
+                                type="button"
+                                className={`add-all-to-cart-btn ${cartOperations['all'] || ''}`}
+                                onClick={handleAddAllToCart}
+                                disabled={cartOperations['all'] === 'adding'}
+                              >
+                                {cartOperations['all'] === 'adding' && '⏳ Adding All...'}
+                                {cartOperations['all'] === 'success' && '✅ All Added to Cart!'}
+                                {cartOperations['all'] === 'error' && '❌ Error Adding Items'}
+                                {!cartOperations['all'] && '🛒 Add All Available to Cart'}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      {/* Unavailable Medicines */}
+                      {extractedData.unmatchedMedicines && extractedData.unmatchedMedicines.length > 0 && (
+                        <div className="unmatched-medicines">
+                          <h4>❌ Sorry, we don't have these products ({extractedData.unmatchedMedicines.length})</h4>
+                          {extractedData.unmatchedMedicines.map((medicine, index) => (
+                            <div key={index} className="unmatched-item">
+                              <div className="unmatched-details">
+                                <h5>"{medicine.originalName}"</h5>
+                                {medicine.normalizedName !== medicine.originalName && (
+                                  <p className="normalized-name">Processed as: "{medicine.normalizedName}"</p>
+                                )}
+                                <p className="reason">
+                                  {medicine.reason === 'not_found' && 'No matching products found in our database'}
+                                  {medicine.reason === 'search_error' && 'Search error occurred'}
+                                  {medicine.reason === 'processing_error' && 'Processing error occurred'}
+                                </p>
+                                {medicine.errorMessage && (
+                                  <p className="error-details">Details: {medicine.errorMessage}</p>
+                                )}
+                              </div>
+                              {medicine.suggestions && medicine.suggestions.length > 0 && (
+                                <div className="suggestions">
+                                  <h6>Suggestions:</h6>
+                                  <ul>
+                                    {medicine.suggestions.map((suggestion, idx) => (
+                                      <li key={idx}>{suggestion}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                       
                       <div className="order-summary">
                         <h4>Order Summary</h4>
                         <div className="summary-row">
-                          <span>Total Amount:</span>
+                          <span>Available Medicines:</span>
+                          <span className="available-count">{extractedData.medicines.length}</span>
+                        </div>
+                        {extractedData.unmatchedMedicines && extractedData.unmatchedMedicines.length > 0 && (
+                          <div className="summary-row">
+                            <span>Unavailable Medicines:</span>
+                            <span className="unavailable-count">{extractedData.unmatchedMedicines.length}</span>
+                          </div>
+                        )}
+                        <div className="summary-row">
+                          <span>Total Amount (Available):</span>
                           <span className="total-amount">₹{extractedData.totalAmount}</span>
                         </div>
                         <div className="stock-status">
@@ -504,9 +864,10 @@ const PrescriptionUpload = () => {
             )}
           </div>
         </div>
+        </div>
+        <Footer />
       </div>
-      <Footer />
-    </div>
+    </ErrorBoundary>
   );
 };
 

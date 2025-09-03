@@ -77,7 +77,7 @@
 
 .product-image {
   width: 100%;              /* take full width of the card */
-  height: 120px;            /* or any fixed height you want */
+  aspect-ratio: 1 / 1;      /* makes it square */
   border-radius: 12px;
   overflow: hidden;
   background: #f8fafc;
@@ -308,7 +308,7 @@
 
 .fallback-grid .product-image {
   width: 100px;
-  height: 100px;
+  aspect-ratio: 1 / 1;      /* ensures square shape */
   margin: 0 auto 1rem;
   border-radius: 8px;
   overflow: hidden;

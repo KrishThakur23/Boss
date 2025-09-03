@@ -20,7 +20,6 @@ const ProductDetail = () => {
   const [activeTab, setActiveTab] = useState('description');
   const [reviews, setReviews] = useState([]);
   const [showImageModal, setShowImageModal] = useState(false);
-  const [isWishlisted, setIsWishlisted] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [recommendedProducts, setRecommendedProducts] = useState([]);
   const [viewCount, setViewCount] = useState(0);
@@ -205,29 +204,6 @@ const ProductDetail = () => {
 
   const handleImageZoom = () => {
     setShowImageModal(true);
-  };
-
-  const handleShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: product.name,
-          text: product.description,
-          url: window.location.href,
-        });
-      } catch (err) {
-        console.log('Error sharing:', err);
-      }
-    } else {
-      // Fallback: copy to clipboard
-      navigator.clipboard.writeText(window.location.href);
-      alert('Product link copied to clipboard!');
-    }
-  };
-
-  const handleWishlist = () => {
-    setIsWishlisted(!isWishlisted);
-    // In a real app, you would save this to the backend
   };
 
   // Mock reviews data (in real app, fetch from database)
@@ -488,20 +464,7 @@ const ProductDetail = () => {
                 </button>
               </div>
 
-              {/* Product Actions */}
-              <div className="product-actions">
-                <button 
-                  className={`wishlist-btn ${isWishlisted ? 'wishlisted' : ''}`}
-                  onClick={handleWishlist}
-                  aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
-                >
-                  <span>{isWishlisted ? '❤️' : '🤍'}</span> 
-                  {isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
-                </button>
-                <button className="share-btn" onClick={handleShare} aria-label="Share product">
-                  <span>📤</span> Share
-                </button>
-              </div>
+
             </div>
           </div>
 
@@ -796,16 +759,7 @@ const ProductDetail = () => {
                               )}
                             </div>
                           </div>
-                          <button 
-                            className="wishlist-heart"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              // Handle wishlist toggle
-                            }}
-                            title="Add to Wishlist"
-                          >
-                            🤍
-                          </button>
+
                         </div>
                         
                         <div className="product-card-info">

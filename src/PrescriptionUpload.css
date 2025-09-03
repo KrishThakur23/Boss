@@ -588,3 +588,826 @@
     font-size: 2.5rem;
   }
 }
+/* Enhanced Prescription Upload Styles */
+
+.matching-summary {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.matching-summary h4 {
+  margin: 0 0 1rem 0;
+  color: #495057;
+  font-size: 1.1rem;
+}
+
+.summary-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+}
+
+.stat-label {
+  font-weight: 500;
+  color: #6c757d;
+}
+
+.stat-value {
+  font-weight: 600;
+  color: #495057;
+}
+
+.medicine-item {
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background: white;
+  transition: all 0.2s ease;
+}
+
+.medicine-item:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.medicine-item.in-stock {
+  border-left: 4px solid #28a745;
+}
+
+.medicine-item.out-of-stock {
+  border-left: 4px solid #dc3545;
+  background: #fff5f5;
+}
+
+.medicine-details h5 {
+  margin: 0 0 0.5rem 0;
+  color: #495057;
+  font-size: 1.1rem;
+}
+
+.original-name {
+  font-size: 0.9rem;
+  color: #6c757d;
+  font-style: italic;
+  margin: 0.25rem 0;
+}
+
+.dosage {
+  font-weight: 500;
+  color: #495057;
+  margin: 0.25rem 0;
+}
+
+.manufacturer {
+  font-size: 0.9rem;
+  color: #6c757d;
+  margin: 0.25rem 0;
+}
+
+.generic-name {
+  font-size: 0.9rem;
+  color: #17a2b8;
+  margin: 0.25rem 0;
+}
+
+.match-info {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.match-score, .confidence {
+  font-size: 0.8rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  background: #e9ecef;
+  color: #495057;
+}
+
+.match-score {
+  background: #d4edda;
+  color: #155724;
+}
+
+.confidence {
+  background: #d1ecf1;
+  color: #0c5460;
+}
+
+.medicine-status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.stock-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.stock-badge.available {
+  background: #d4edda;
+  color: #155724;
+}
+
+.stock-badge.unavailable {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.price-info {
+  text-align: right;
+}
+
+.price {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #28a745;
+  margin: 0.25rem 0;
+}
+
+.mrp {
+  font-size: 0.9rem;
+  color: #6c757d;
+  text-decoration: line-through;
+  margin: 0;
+}
+
+.discount {
+  font-size: 0.8rem;
+  color: #dc3545;
+  font-weight: 500;
+  margin: 0;
+}
+
+.prescription-required {
+  font-size: 0.8rem;
+  color: #856404;
+  background: #fff3cd;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  margin-top: 0.5rem;
+}
+
+.unmatched-medicines {
+  background: #fff5f5;
+  border: 1px solid #f5c6cb;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.unmatched-medicines h4 {
+  margin: 0 0 1rem 0;
+  color: #721c24;
+  font-size: 1.1rem;
+}
+
+.unmatched-item {
+  background: white;
+  border: 1px solid #f5c6cb;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.unmatched-item:last-child {
+  margin-bottom: 0;
+}
+
+.unmatched-details h5 {
+  margin: 0 0 0.5rem 0;
+  color: #721c24;
+  font-size: 1rem;
+}
+
+.normalized-name {
+  font-size: 0.9rem;
+  color: #6c757d;
+  font-style: italic;
+  margin: 0.25rem 0;
+}
+
+.reason {
+  color: #856404;
+  background: #fff3cd;
+  padding: 0.5rem;
+  border-radius: 4px;
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+}
+
+.error-details {
+  font-size: 0.8rem;
+  color: #721c24;
+  margin: 0.25rem 0;
+}
+
+.suggestions {
+  margin-top: 1rem;
+}
+
+.suggestions h6 {
+  margin: 0 0 0.5rem 0;
+  color: #495057;
+  font-size: 0.9rem;
+}
+
+.suggestions ul {
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.suggestions li {
+  font-size: 0.9rem;
+  color: #6c757d;
+  margin-bottom: 0.25rem;
+}
+
+.order-summary {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1.5rem;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.summary-row:last-child {
+  border-bottom: none;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.available-count {
+  color: #28a745;
+  font-weight: 600;
+}
+
+.unavailable-count {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+.total-amount {
+  color: #28a745;
+  font-weight: 600;
+  font-size: 1.2rem;
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.status-badge.available {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-badge.partial {
+  background: #fff3cd;
+  color: #856404;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .summary-stats {
+    grid-template-columns: 1fr;
+  }
+  
+  .medicine-item {
+    padding: 0.75rem;
+  }
+  
+  .medicine-status {
+    align-items: flex-start;
+    margin-top: 1rem;
+  }
+  
+  .match-info {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .price-info {
+    text-align: left;
+  }
+}
+
+/* Loading States */
+.processing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: #e3f2fd;
+  border: 1px solid #bbdefb;
+  border-radius: 6px;
+  margin: 1rem 0;
+}
+
+.processing-indicator .spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #1976d2;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}/* C
+art Integration Styles */
+
+.medicine-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: flex-end;
+  margin-top: 1rem;
+}
+
+.quantity-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.quantity-selector label {
+  font-weight: 500;
+  color: #495057;
+}
+
+.qty-btn {
+  width: 30px;
+  height: 30px;
+  border: 1px solid #ced4da;
+  background: white;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.qty-btn:hover:not(:disabled) {
+  background: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.qty-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.quantity {
+  min-width: 30px;
+  text-align: center;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  background: #f8f9fa;
+}
+
+.add-to-cart-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 140px;
+  text-align: center;
+}
+
+.add-to-cart-btn:not(:disabled) {
+  background: #28a745;
+  color: white;
+}
+
+.add-to-cart-btn:hover:not(:disabled) {
+  background: #218838;
+  transform: translateY(-1px);
+}
+
+.add-to-cart-btn:disabled {
+  background: #6c757d;
+  color: white;
+  cursor: not-allowed;
+}
+
+.add-to-cart-btn.adding {
+  background: #17a2b8;
+  color: white;
+}
+
+.add-to-cart-btn.success {
+  background: #28a745;
+  color: white;
+}
+
+.add-to-cart-btn.error {
+  background: #dc3545;
+  color: white;
+}
+
+.bulk-actions {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e9ecef;
+  text-align: center;
+}
+
+.add-all-to-cart-btn {
+  padding: 0.75rem 2rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 200px;
+}
+
+.add-all-to-cart-btn:not(:disabled) {
+  background: #007bff;
+  color: white;
+}
+
+.add-all-to-cart-btn:hover:not(:disabled) {
+  background: #0056b3;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,123,255,0.3);
+}
+
+.add-all-to-cart-btn:disabled {
+  background: #6c757d;
+  color: white;
+  cursor: not-allowed;
+}
+
+.add-all-to-cart-btn.adding {
+  background: #17a2b8;
+  color: white;
+}
+
+.add-all-to-cart-btn.success {
+  background: #28a745;
+  color: white;
+}
+
+.add-all-to-cart-btn.error {
+  background: #dc3545;
+  color: white;
+}
+
+/* Cart Success Messages */
+.cart-success-message {
+  background: #d4edda;
+  border: 1px solid #c3e6cb;
+  color: #155724;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  margin: 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cart-error-message {
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  color: #721c24;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  margin: 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Prescription Requirements Notice */
+.prescription-notice {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  color: #856404;
+  padding: 1rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+}
+
+.prescription-notice h5 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+}
+
+.prescription-notice p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .medicine-actions {
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+  
+  .quantity-selector {
+    justify-content: center;
+  }
+  
+  .add-to-cart-btn {
+    width: 100%;
+  }
+  
+  .add-all-to-cart-btn {
+    width: 100%;
+    min-width: auto;
+  }
+  
+  .bulk-actions {
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+  }
+}
+
+/* Animation for cart operations */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.add-to-cart-btn.adding,
+.add-all-to-cart-btn.adding {
+  animation: pulse 1.5s infinite;
+}
+
+.add-to-cart-btn.success,
+.add-all-to-cart-btn.success {
+  animation: pulse 0.5s ease-out;
+}
+
+/* Quantity limits notice */
+.quantity-limits {
+  font-size: 0.8rem;
+  color: #6c757d;
+  margin-top: 0.25rem;
+  text-align: center;
+}
+
+/* Out of stock styling */
+.medicine-item.out-of-stock .add-to-cart-btn {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.medicine-item.out-of-stock .quantity-selector {
+  opacity: 0.5;
+  pointer-events: none;
+}/* Feed
+back Messages Styles */
+
+.feedback-messages {
+  margin: 1rem 0;
+  position: relative;
+}
+
+.clear-all-messages {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: background-color 0.2s ease;
+}
+
+.clear-all-messages:hover {
+  background: #5a6268;
+}
+
+/* Error Boundary Styles */
+.error-boundary {
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: #fff5f5;
+  border: 1px solid #fed7d7;
+  border-radius: 8px;
+  margin: 1rem 0;
+}
+
+.error-boundary-content {
+  text-align: center;
+  max-width: 500px;
+}
+
+.error-boundary-content h2 {
+  color: #e53e3e;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+.error-boundary-content p {
+  color: #744210;
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+}
+
+.error-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.retry-btn, .reload-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.retry-btn {
+  background: #3182ce;
+  color: white;
+}
+
+.retry-btn:hover {
+  background: #2c5aa0;
+}
+
+.reload-btn {
+  background: #38a169;
+  color: white;
+}
+
+.reload-btn:hover {
+  background: #2f855a;
+}
+
+.error-details {
+  text-align: left;
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.error-details summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #4a5568;
+  margin-bottom: 0.5rem;
+}
+
+.error-details pre {
+  background: #1a202c;
+  color: #f7fafc;
+  padding: 0.75rem;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-size: 0.875rem;
+  margin: 0.5rem 0;
+}
+
+.error-help {
+  text-align: left;
+  background: #fffaf0;
+  border: 1px solid #fbd38d;
+  border-radius: 6px;
+  padding: 1rem;
+}
+
+.error-help p {
+  margin: 0 0 0.5rem 0;
+  font-weight: 600;
+  color: #744210;
+}
+
+.error-help ul {
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.error-help li {
+  color: #744210;
+  margin-bottom: 0.25rem;
+}
+
+/* Enhanced error states for specific components */
+.prescription-form.has-errors {
+  border: 2px solid #feb2b2;
+  border-radius: 8px;
+  padding: 1rem;
+  background: #fff5f5;
+}
+
+.processing-error {
+  background: #fff5f5;
+  border: 1px solid #feb2b2;
+  color: #742a2a;
+  padding: 1rem;
+  border-radius: 6px;
+  margin: 1rem 0;
+}
+
+.processing-error h4 {
+  margin: 0 0 0.5rem 0;
+  color: #742a2a;
+}
+
+.processing-error p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+/* Retry button states */
+.retry-operation {
+  background: #3182ce;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.retry-operation:hover {
+  background: #2c5aa0;
+}
+
+.retry-operation:disabled {
+  background: #a0aec0;
+  cursor: not-allowed;
+}
+
+/* Mobile responsive error handling */
+@media (max-width: 768px) {
+  .error-boundary {
+    padding: 1rem;
+  }
+  
+  .error-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .retry-btn, .reload-btn {
+    width: 100%;
+    max-width: 200px;
+  }
+  
+  .feedback-messages {
+    margin: 0.75rem 0;
+  }
+  
+  .clear-all-messages {
+    width: 100%;
+  }
+}

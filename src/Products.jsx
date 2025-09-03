@@ -30,6 +30,7 @@ const Products = () => {
     const urlDisease = searchParams.get('disease');
     const urlCategoryIds = searchParams.get('categoryIds');
     const urlKeywords = searchParams.get('keywords');
+    const urlSearch = searchParams.get('search');
     
     if (urlCategory) {
       // Map URL category to actual category name
@@ -49,6 +50,9 @@ const Products = () => {
     }
     if (urlKeywords) {
       setKeywordsFilter(urlKeywords.split(','));
+    }
+    if (urlSearch) {
+      setSearchQuery(urlSearch);
     }
     
     // Add a timeout to prevent infinite loading

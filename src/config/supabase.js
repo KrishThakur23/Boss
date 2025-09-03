@@ -3,15 +3,16 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.REACT_APP_SUPABASE_URL
 const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY
 
-
+// Check if we're in a browser environment
+const isBrowser = typeof window !== 'undefined'
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true,
-    storage: window.localStorage, // Explicitly use localStorage
-    storageKey: 'supabase.auth.token', // Explicit storage key
+    persistSession: isBrowser,
+    detectSessionInUrl: isBrowser,
+    storage: isBrowser ? window.localStorage : undefined,
+    storageKey: 'supabase.auth.token',
   },
   global: {
     headers: {
