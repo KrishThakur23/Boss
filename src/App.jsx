@@ -9,6 +9,7 @@ import SignIn from './SignIn';
 import SignUp from './SignUp';
 import AboutUs from './AboutUs';
 import Profile from './Profile';
+import ProfileChangeRequest from './components/ProfileChangeRequest';
 import AdminDashboard from './AdminDashboard';
 import OrdersPage from './OrdersPage';
 import Donate from './Donate';
@@ -53,6 +54,7 @@ function App() {
                 <Route path="/signup" element={<SignUp />} />
                 <Route path="/about" element={<AboutUs />} />
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/profile-change-request" element={<ProfileChangeRequest />} />
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/orders" element={<OrdersPage />} />
                 <Route path="/donate" element={<Donate />} />

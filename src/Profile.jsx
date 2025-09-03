@@ -2,25 +2,25 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from './contexts/AuthContext';
 import Header from './Header';
 
-import { supabase } from './config/supabase';
 import { UserProfileService } from './services/userProfileService';
 import './Profile.css';
 
 const Profile = () => {
   const { user, userProfile, isAuthenticated } = useAuth();
-  const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
     phone: '',
-    address: '',
-    city: '',
-    state: '',
-    pincode: '',
     gender: ''
   });
-  const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState({ type: '', text: '' });
+
+  // Change tracking and state management
+  const [originalData, setOriginalData] = useState({});
+  const [changedFields, setChangedFields] = useState(new Set());
+  const [validationErrors, setValidationErrors] = useState({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saveError, setSaveError] = useState(null);
 
   useEffect(() => {
     const loadUserProfile = async () => {
@@ -37,10 +37,6 @@ const Profile = () => {
               first_name: supabaseProfile.first_name || '',
               last_name: supabaseProfile.last_name || '',
               phone: supabaseProfile.phone || '',
-              address: supabaseProfile.address || '',
-              city: supabaseProfile.city || '',
-              state: supabaseProfile.state || '',
-              pincode: supabaseProfile.pincode || '',
               gender: supabaseProfile.gender || ''
             });
           } else if (userProfile) {
@@ -50,10 +46,6 @@ const Profile = () => {
               first_name: userProfile.first_name || '',
               last_name: userProfile.last_name || '',
               phone: userProfile.phone || '',
-              address: userProfile.address || '',
-              city: userProfile.city || '',
-              state: userProfile.state || '',
-              pincode: userProfile.pincode || '',
               gender: userProfile.gender || ''
             });
           } else {
@@ -63,10 +55,6 @@ const Profile = () => {
               first_name: user.user_metadata?.first_name || '',
               last_name: user.user_metadata?.last_name || '',
               phone: user.user_metadata?.phone || '',
-              address: user.user_metadata?.address || '',
-              city: user.user_metadata?.city || '',
-              state: user.user_metadata?.state || '',
-              pincode: user.user_metadata?.pincode || '',
               gender: user.user_metadata?.gender || ''
             });
           }
@@ -81,10 +69,6 @@ const Profile = () => {
             first_name: user.user_metadata?.first_name || '',
             last_name: user.user_metadata?.last_name || '',
             phone: user.user_metadata?.phone || '',
-            address: user.user_metadata?.address || '',
-            city: user.user_metadata?.city || '',
-            state: user.user_metadata?.state || '',
-            pincode: user.user_metadata?.pincode || '',
             gender: user.user_metadata?.gender || ''
           });
         }
@@ -94,158 +78,160 @@ const Profile = () => {
     loadUserProfile();
   }, [user, userProfile]);
 
-  // Debug effect for isEditing state
+  // Set original data when profile loads
   useEffect(() => {
-    console.log('Profile: isEditing state changed to:', isEditing);
-    console.log('Profile: formData state:', formData);
-  }, [isEditing, formData]);
+    if (formData.first_name || formData.last_name || formData.phone || formData.gender) {
+      setOriginalData({...formData});
+      setChangedFields(new Set()); // Clear any existing changes
+    }
+  }, [formData.first_name, formData.last_name, formData.phone, formData.gender]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
+  // Handle field changes with change tracking and validation
+  const handleFieldChange = (fieldName, value) => {
+    // Update form data
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [fieldName]: value
     }));
+
+    // Track changed fields
+    const newChangedFields = new Set(changedFields);
+    if (originalData[fieldName] !== value) {
+      newChangedFields.add(fieldName);
+    } else {
+      newChangedFields.delete(fieldName);
+    }
+    setChangedFields(newChangedFields);
+
+    // Real-time validation
+    const error = validateField(fieldName, value);
+    setValidationErrors(prev => ({
+      ...prev,
+      [fieldName]: error
+    }));
+
+    // Clear any previous save messages
+    setSaveSuccess(false);
+    setSaveError(null);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setMessage({ type: '', text: '' });
-    
+  // Check if there are any changes
+  const hasChanges = changedFields.size > 0;
+
+  // Validation rules
+  const validationRules = {
+    first_name: {
+      required: true,
+      minLength: 2,
+      maxLength: 50,
+      pattern: /^[a-zA-Z\s'-]+$/,
+      message: 'First name should contain only letters, spaces, hyphens, and apostrophes'
+    },
+    last_name: {
+      required: true,
+      minLength: 2,
+      maxLength: 50,
+      pattern: /^[a-zA-Z\s'-]+$/,
+      message: 'Last name should contain only letters, spaces, hyphens, and apostrophes'
+    },
+    phone: {
+      required: false,
+      pattern: /^[\+]?[1-9][\d]{0,15}$/,
+      message: 'Please enter a valid phone number (10-16 digits)'
+    },
+    gender: {
+      required: false,
+      message: 'Please select a gender'
+    }
+  };
+
+  // Validate a single field
+  const validateField = (fieldName, value) => {
+    const rules = validationRules[fieldName];
+    if (!rules) return null;
+
+    // Check if required field is empty
+    if (rules.required && (!value || value.trim() === '')) {
+      return `${fieldName.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())} is required`;
+    }
+
+    // Skip other validations if field is empty and not required
+    if (!value || value.trim() === '') {
+      return null;
+    }
+
+    // Check minimum length
+    if (rules.minLength && value.length < rules.minLength) {
+      return `${fieldName.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())} must be at least ${rules.minLength} characters`;
+    }
+
+    // Check maximum length
+    if (rules.maxLength && value.length > rules.maxLength) {
+      return `${fieldName.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())} must be no more than ${rules.maxLength} characters`;
+    }
+
+    // Check pattern
+    if (rules.pattern && !rules.pattern.test(value)) {
+      return rules.message;
+    }
+
+    return null; // No errors
+  };
+
+  // Validate all fields
+  const validateAllFields = () => {
+    const errors = {};
+    Object.keys(validationRules).forEach(fieldName => {
+      const error = validateField(fieldName, formData[fieldName]);
+      if (error) {
+        errors[fieldName] = error;
+      }
+    });
+    return errors;
+  };
+
+  // Handle save operation
+  const handleSave = async () => {
+    if (!hasChanges) return;
+
+    setIsSaving(true);
+    setSaveError(null);
+
     try {
-      console.log('Starting profile update...');
-      console.log('Form data:', formData);
-      console.log('User ID:', user?.id);
-      console.log('User email:', user?.email);
+      // Create object with only changed fields
+      const changedData = {};
+      changedFields.forEach(field => {
+        changedData[field] = formData[field];
+      });
+
+      console.log('Saving changed fields:', changedData);
+
+      // Save to Supabase
+      const result = await UserProfileService.updateUserProfile(user.id, changedData);
       
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
-
-      const profileData = {
-        user_id: user.id,
-        email: user.email,
-        first_name: formData.first_name,
-        last_name: formData.last_name,
-        phone: formData.phone,
-        gender: formData.gender,
-        address: formData.address,
-        city: formData.city,
-        state: formData.state,
-        pincode: formData.pincode
-      };
-
-      console.log('Profile data to save:', profileData);
-      console.log('Saving profile to Supabase...');
-
-      // Use direct Supabase calls instead of UserProfileService for now
-      const { data: existingProfile, error: fetchError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 = no rows returned
-        throw new Error(`Failed to check existing profile: ${fetchError.message}`);
-      }
-
-      let savedProfile;
-      if (existingProfile) {
-        // Update existing profile
-        console.log('Updating existing profile...');
-        const { data, error } = await supabase
-          .from('profiles')
-          .update(profileData)
-          .eq('id', user.id)
-          .select()
-          .single();
-
-        if (error) {
-          throw new Error(`Failed to update profile: ${error.message}`);
-        }
-        savedProfile = data;
-        console.log('Profile updated successfully:', savedProfile);
+      if (result) {
+        console.log('Profile updated successfully:', result);
+        
+        // Update original data to reflect saved changes
+        setOriginalData({...formData});
+        setChangedFields(new Set());
+        setSaveSuccess(true);
+        
+        // Clear success message after 3 seconds
+        setTimeout(() => setSaveSuccess(false), 3000);
       } else {
-        // Create new profile
-        console.log('Creating new profile...');
-        const { data, error } = await supabase
-          .from('profiles')
-          .insert(profileData)
-          .select()
-          .single();
-
-        if (error) {
-          throw new Error(`Failed to create profile: ${error.message}`);
-        }
-        savedProfile = data;
-        console.log('Profile created successfully:', savedProfile);
+        throw new Error('Failed to update profile');
       }
-
-      setMessage({ type: 'success', text: 'Profile updated successfully! Data saved to database.' });
-      setIsEditing(false);
-      
-      // Update local state with saved data
-      setFormData({
-        first_name: savedProfile.first_name || '',
-        last_name: savedProfile.last_name || '',
-        phone: savedProfile.phone || '',
-        address: savedProfile.address || '',
-        city: savedProfile.city || '',
-        state: savedProfile.state || '',
-        pincode: savedProfile.pincode || '',
-        gender: savedProfile.gender || ''
-      });
-
     } catch (error) {
-      console.error('Error updating profile:', error);
-      let errorMessage = 'Failed to update profile. Please try again.';
-      
-      if (error.message === 'User not authenticated') {
-        errorMessage = 'You are not authenticated. Please sign in again.';
-      } else if (error.message) {
-        errorMessage = `Error: ${error.message}`;
-      }
-      
-      setMessage({ type: 'error', text: errorMessage });
+      console.error('Error saving profile:', error);
+      setSaveError(error.message || 'Failed to save changes. Please try again.');
     } finally {
-      setIsLoading(false);
+      setIsSaving(false);
     }
-  };
-  
-
-  const handleCancel = () => {
-    setIsEditing(false);
-    // Reset form data to original values
-    if (userProfile) {
-      setFormData({
-        first_name: userProfile.first_name || '',
-        last_name: userProfile.last_name || '',
-        phone: userProfile.phone || '',
-        address: userProfile.address || '',
-        city: userProfile.city || '',
-        state: userProfile.state || '',
-        pincode: userProfile.pincode || '',
-        gender: userProfile.gender || ''
-      });
-    } else if (user) {
-      // If no userProfile, use user metadata
-      setFormData({
-        first_name: user.user_metadata?.first_name || '',
-        last_name: user.user_metadata?.last_name || '',
-        phone: user.user_metadata?.phone || '',
-        address: user.user_metadata?.address || '',
-        city: user.user_metadata?.city || '',
-        state: user.user_metadata?.state || '',
-        pincode: user.user_metadata?.pincode || '',
-        gender: user.user_metadata?.gender || ''
-      });
-    }
-    setMessage({ type: '', text: '' });
   };
 
   // Test database connection function
@@ -301,7 +287,6 @@ const Profile = () => {
             <p>Please sign in to view your profile.</p>
           </div>
         </div>
-        <Footer />
       </div>
     );
   }
@@ -361,34 +346,9 @@ const Profile = () => {
             <div className="info-section">
               <div className="section-header">
                 <h3>Personal Information</h3>
-                <button 
-                  className="section-edit-btn"
-                  onClick={() => {
-                    console.log('Personal Information Edit button clicked');
-                    console.log('Current isEditing state:', isEditing);
-                    console.log('Setting isEditing to true');
-                    setIsEditing(true);
-                  }}
-                  disabled={isLoading}
-                >
-                  Edit
-                </button>
               </div>
                
               <div className="section-content">
-                {isEditing && (
-                  <div className="editing-notice" style={{ 
-                    background: '#dbeafe', 
-                    color: '#1e40af', 
-                    padding: '8px 12px', 
-                    borderRadius: '6px', 
-                    marginBottom: '16px',
-                    fontSize: '0.875rem',
-                    fontWeight: '500'
-                  }}>
-                    ✏️ Editing mode enabled - You can now modify your information
-                  </div>
-                )}
                 <div className="form-row">
                   <div className="form-group">
                     <label htmlFor="first_name">First Name</label>
@@ -396,16 +356,21 @@ const Profile = () => {
                       type="text"
                       id="first_name"
                       name="first_name"
-                      value={isEditing ? formData.first_name : (getDisplayValue('first_name') || '')}
-                      onChange={handleInputChange}
-                      placeholder="Enter first name"
-                      disabled={!isEditing}
-                      className={!isEditing ? 'readonly-input' : ''}
-                      style={{ 
-                        cursor: isEditing ? 'text' : 'not-allowed',
-                        opacity: isEditing ? 1 : 0.7
-                      }}
+                      value={formData.first_name || ''}
+                      placeholder="Enter your first name"
+                      onChange={(e) => handleFieldChange('first_name', e.target.value)}
+                      className={`profile-field editable-field ${validationErrors.first_name ? 'error' : formData.first_name ? 'valid' : ''}`}
                     />
+                    {validationErrors.first_name && (
+                      <div className="validation-feedback error">
+                        <span className="error-message">❌ {validationErrors.first_name}</span>
+                      </div>
+                    )}
+                    {!validationErrors.first_name && formData.first_name && (
+                      <div className="validation-feedback success">
+                        <span className="success-message">✅ Looks good!</span>
+                      </div>
+                    )}
                   </div>
                   <div className="form-group">
                     <label htmlFor="last_name">Last Name</label>
@@ -413,46 +378,59 @@ const Profile = () => {
                       type="text"
                       id="last_name"
                       name="last_name"
-                      value={isEditing ? formData.last_name : (getDisplayValue('last_name') || '')}
-                      onChange={handleInputChange}
-                      placeholder="Enter last name"
-                      disabled={!isEditing}
-                      className={!isEditing ? 'readonly-input' : ''}
-                      style={{ 
-                        cursor: isEditing ? 'text' : 'not-allowed',
-                        opacity: isEditing ? 1 : 0.7
-                      }}
+                      value={formData.last_name || ''}
+                      placeholder="Enter your last name"
+                      onChange={(e) => handleFieldChange('last_name', e.target.value)}
+                      className={`profile-field editable-field ${validationErrors.last_name ? 'error' : formData.last_name ? 'valid' : ''}`}
                     />
+                    {validationErrors.last_name && (
+                      <div className="validation-feedback error">
+                        <span className="error-message">❌ {validationErrors.last_name}</span>
+                      </div>
+                    )}
+                    {!validationErrors.last_name && formData.last_name && (
+                      <div className="validation-feedback success">
+                        <span className="success-message">✅ Looks good!</span>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="form-group">
                   <label>Gender</label>
-                  <div className="radio-group" style={{ 
-                    opacity: isEditing ? 1 : 0.7,
-                    pointerEvents: isEditing ? 'auto' : 'none'
-                  }}>
-                    <label className="radio-option">
+                  <div className="radio-group">
+                    <div className="radio-option">
                       <input
                         type="radio"
+                        id="male"
                         name="gender"
                         value="male"
-                        checked={isEditing ? formData.gender === 'male' : getDisplayValue('gender') === 'male'}
-                        onChange={handleInputChange}
-                        disabled={!isEditing}
+                        checked={formData.gender === 'male'}
+                        onChange={(e) => handleFieldChange('gender', e.target.value)}
                       />
-                      <span className="radio-label">Male</span>
-                    </label>
-                    <label className="radio-option">
+                      <label htmlFor="male" className="radio-label">Male</label>
+                    </div>
+                    <div className="radio-option">
                       <input
                         type="radio"
+                        id="female"
                         name="gender"
                         value="female"
-                        checked={isEditing ? formData.gender === 'female' : getDisplayValue('gender') === 'female'}
-                        onChange={handleInputChange}
-                        disabled={!isEditing}
+                        checked={formData.gender === 'female'}
+                        onChange={(e) => handleFieldChange('gender', e.target.value)}
                       />
-                      <span className="radio-label">Female</span>
-                    </label>
+                      <label htmlFor="female" className="radio-label">Female</label>
+                    </div>
+                    <div className="radio-option">
+                      <input
+                        type="radio"
+                        id="other"
+                        name="gender"
+                        value="other"
+                        checked={formData.gender === 'other'}
+                        onChange={(e) => handleFieldChange('gender', e.target.value)}
+                      />
+                      <label htmlFor="other" className="radio-label">Other</label>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -462,13 +440,7 @@ const Profile = () => {
             <div className="info-section">
               <div className="section-header">
                 <h3>Email Address</h3>
-                <button 
-                  className="section-edit-btn"
-                  onClick={() => setIsEditing(true)}
-                  disabled={isLoading}
-                >
-                  Edit
-                </button>
+                <span className="email-note">Contact support to change email</span>
               </div>
               <div className="section-content">
                 <div className="form-group">
@@ -489,13 +461,6 @@ const Profile = () => {
             <div className="info-section">
               <div className="section-header">
                 <h3>Phone</h3>
-                <button 
-                  className="section-edit-btn"
-                  onClick={() => setIsEditing(true)}
-                  disabled={isLoading}
-                >
-                  Edit
-                </button>
               </div>
               <div className="section-content">
                 <div className="form-group">
@@ -503,48 +468,62 @@ const Profile = () => {
                     type="tel"
                     id="phone"
                     name="phone"
-                    value={isEditing ? formData.phone : (getDisplayValue('phone') || '')}
-                    onChange={handleInputChange}
-                    placeholder="Enter phone number"
-                    disabled={!isEditing}
-                    className={!isEditing ? 'readonly-input' : ''}
-                    style={{ 
-                      cursor: isEditing ? 'text' : 'not-allowed',
-                      opacity: isEditing ? 1 : 0.7
-                    }}
+                    value={formData.phone || ''}
+                    placeholder="Enter your phone number"
+                    onChange={(e) => handleFieldChange('phone', e.target.value)}
+                    className={`profile-field editable-field ${validationErrors.phone ? 'error' : formData.phone ? 'valid' : ''}`}
                   />
+                  {validationErrors.phone && (
+                    <div className="validation-feedback error">
+                      <span className="error-message">❌ {validationErrors.phone}</span>
+                    </div>
+                  )}
+                  {!validationErrors.phone && formData.phone && (
+                    <div className="validation-feedback success">
+                      <span className="success-message">✅ Looks good!</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Form Actions - Only show when editing */}
-            {isEditing && (
-              <>
-                {message.text && (
-                  <div className={`message ${message.type}`}>
-                    {message.text}
+
+
+            {/* Save Changes Section - Always Visible */}
+            <div className="save-section">
+              {saveSuccess && (
+                <div className="save-message success">
+                  ✅ Profile updated successfully!
+                </div>
+              )}
+              
+              {saveError && (
+                <div className="save-message error">
+                  ❌ {saveError}
+                </div>
+              )}
+
+              <div className="save-actions">
+                {hasChanges && (
+                  <div className="changes-indicator">
+                    📝 You have {changedFields.size} unsaved change{changedFields.size !== 1 ? 's' : ''}
                   </div>
                 )}
-                <div className="form-actions">
-                  <button 
-                    type="button" 
-                    className="save-btn"
-                    disabled={isLoading}
-                    onClick={handleSubmit}
-                  >
-                    {isLoading ? 'Saving...' : 'Save Changes'}
-                  </button>
-                  <button 
-                    type="button" 
-                    className="cancel-btn"
-                    onClick={handleCancel}
-                    disabled={isLoading}                  
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </>
-            )}
+                <button
+                  onClick={handleSave}
+                  disabled={isSaving || !hasChanges}
+                  className={`save-button ${hasChanges ? 'has-changes' : 'no-changes'}`}
+                >
+                  {isSaving ? (
+                    <>🔄 Saving...</>
+                  ) : hasChanges ? (
+                    <>💾 Save Changes</>
+                  ) : (
+                    <>✅ All Saved</>
+                  )}
+                </button>
+              </div>
+            </div>
 
             {/* Test Database Connection Button */}
             <div style={{ marginTop: '20px', padding: '16px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>

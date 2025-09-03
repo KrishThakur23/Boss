@@ -244,15 +244,7 @@
   color: #374151;
 }
 
-.social-button.facebook {
-  color: #1877f2;
-  border-color: #1877f2;
-}
 
-.social-button.facebook:hover:not(:disabled) {
-  background: #1877f2;
-  color: white;
-}
 
 .signin-prompt {
   text-align: center;

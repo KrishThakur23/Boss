@@ -689,3 +689,402 @@ BEGIN
     RAISE NOTICE '📝 Sample Data: 8 categories, 18 products';
     RAISE NOTICE '🚀 Ready for frontend integration!';
 END $$;
+
+-- =====================================================
+-- ENHANCED ROW LEVEL SECURITY (RLS) POLICIES FOR PROFILES
+-- =====================================================
+
+-- Drop existing profile policies to replace with more secure ones
+DROP POLICY IF EXISTS "Users can view their own profile" ON profiles;
+DROP POLICY IF EXISTS "Users can update their own profile" ON profiles;
+DROP POLICY IF EXISTS "Users can insert their own profile" ON profiles;
+DROP POLICY IF EXISTS "Enable insert for authenticated users only" ON profiles;
+
+-- Enhanced Profiles RLS Policies
+-- Policy 1: Users can only SELECT their own profile data
+CREATE POLICY "profiles_select_own_data" ON profiles
+    FOR SELECT 
+    USING (auth.uid() = id);
+
+-- Policy 2: Users can only UPDATE their own profile data
+CREATE POLICY "profiles_update_own_data" ON profiles
+    FOR UPDATE 
+    USING (auth.uid() = id)
+    WITH CHECK (auth.uid() = id);
+
+-- Policy 3: Users can only INSERT their own profile data
+CREATE POLICY "profiles_insert_own_data" ON profiles
+    FOR INSERT 
+    WITH CHECK (auth.uid() = id);
+
+-- Policy 4: Users can only DELETE their own profile data
+CREATE POLICY "profiles_delete_own_data" ON profiles
+    FOR DELETE 
+    USING (auth.uid() = id);
+
+-- Policy 5: Admin users can view all profiles (for admin dashboard)
+CREATE POLICY "profiles_admin_select_all" ON profiles
+    FOR SELECT 
+    USING (
+        EXISTS (
+            SELECT 1 FROM profiles 
+            WHERE id = auth.uid() AND is_admin = true
+        )
+    );
+
+-- Policy 6: Admin users can update any profile (for admin management)
+CREATE POLICY "profiles_admin_update_all" ON profiles
+    FOR UPDATE 
+    USING (
+        EXISTS (
+            SELECT 1 FROM profiles 
+            WHERE id = auth.uid() AND is_admin = true
+        )
+    );
+
+-- =====================================================
+-- SECURITY FUNCTIONS FOR PROFILE MANAGEMENT
+-- =====================================================
+
+-- Function to log profile changes for compliance
+CREATE OR REPLACE FUNCTION log_profile_changes()
+RETURNS TRIGGER AS $
+DECLARE
+    change_log JSONB;
+BEGIN
+    -- Create change log entry
+    change_log := jsonb_build_object(
+        'user_id', COALESCE(NEW.id, OLD.id),
+        'action', TG_OP,
+        'timestamp', NOW(),
+        'changed_by', auth.uid(),
+        'old_values', CASE WHEN TG_OP = 'DELETE' THEN to_jsonb(OLD) ELSE NULL END,
+        'new_values', CASE WHEN TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN to_jsonb(NEW) ELSE NULL END
+    );
+    
+    -- Insert into audit log (you can create an audit table if needed)
+    -- For now, we'll just log to PostgreSQL logs
+    RAISE NOTICE 'Profile Change Log: %', change_log;
+    
+    RETURN COALESCE(NEW, OLD);
+END;
+$ language 'plpgsql' SECURITY DEFINER;
+
+-- Create trigger for profile change logging
+DROP TRIGGER IF EXISTS profile_changes_audit ON profiles;
+CREATE TRIGGER profile_changes_audit
+    AFTER INSERT OR UPDATE OR DELETE ON profiles
+    FOR EACH ROW EXECUTE FUNCTION log_profile_changes();
+
+-- =====================================================
+-- SECURITY VALIDATION FUNCTIONS
+-- =====================================================
+
+-- Function to validate profile data integrity
+CREATE OR REPLACE FUNCTION validate_profile_data()
+RETURNS TRIGGER AS $
+BEGIN
+    -- Ensure user can only modify their own profile
+    IF auth.uid() != NEW.id THEN
+        RAISE EXCEPTION 'Access denied: Users can only modify their own profile data';
+    END IF;
+    
+    -- Validate email format
+    IF NEW.email IS NOT NULL AND NEW.email !~ '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$' THEN
+        RAISE EXCEPTION 'Invalid email format';
+    END IF;
+    
+    -- Validate phone number (Indian format)
+    IF NEW.phone IS NOT NULL AND NEW.phone !~ '^[6-9][0-9]{9}$' THEN
+        RAISE EXCEPTION 'Invalid phone number format. Must be 10 digits starting with 6-9';
+    END IF;
+    
+    -- Validate pincode (Indian format)
+    IF NEW.pincode IS NOT NULL AND NEW.pincode !~ '^[1-9][0-9]{5}$' THEN
+        RAISE EXCEPTION 'Invalid pincode format. Must be 6 digits';
+    END IF;
+    
+    -- Prevent modification of critical fields by non-admin users
+    IF NOT EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true) THEN
+        -- Non-admin users cannot change admin status
+        IF OLD.is_admin IS DISTINCT FROM NEW.is_admin THEN
+            RAISE EXCEPTION 'Access denied: Cannot modify admin status';
+        END IF;
+        
+        -- Non-admin users cannot change their user ID
+        IF OLD.id IS DISTINCT FROM NEW.id THEN
+            RAISE EXCEPTION 'Access denied: Cannot modify user ID';
+        END IF;
+    END IF;
+    
+    RETURN NEW;
+END;
+$ language 'plpgsql' SECURITY DEFINER;
+
+-- Create trigger for profile data validation
+DROP TRIGGER IF EXISTS validate_profile_data_trigger ON profiles;
+CREATE TRIGGER validate_profile_data_trigger
+    BEFORE UPDATE ON profiles
+    FOR EACH ROW EXECUTE FUNCTION validate_profile_data();
+
+-- =====================================================
+-- SECURITY VIEWS FOR SAFE DATA ACCESS
+-- =====================================================
+
+-- Create a secure view for profile data that only shows allowed fields
+CREATE OR REPLACE VIEW secure_profiles AS
+SELECT 
+    id,
+    name,
+    email,
+    phone,
+    city,
+    state,
+    gender,
+    created_at,
+    updated_at
+FROM profiles
+WHERE auth.uid() = id;
+
+-- Grant access to the secure view
+GRANT SELECT ON secure_profiles TO authenticated;
+
+-- =====================================================
+-- COMPLIANCE AND AUDIT FUNCTIONS
+-- =====================================================
+
+-- Function to get user's own profile data (GDPR compliance)
+CREATE OR REPLACE FUNCTION get_my_profile_data()
+RETURNS TABLE (
+    user_id UUID,
+    profile_data JSONB,
+    created_at TIMESTAMPTZ,
+    last_updated TIMESTAMPTZ
+) 
+SECURITY DEFINER
+LANGUAGE plpgsql
+AS $
+BEGIN
+    -- Ensure user is authenticated
+    IF auth.uid() IS NULL THEN
+        RAISE EXCEPTION 'Authentication required';
+    END IF;
+    
+    RETURN QUERY
+    SELECT 
+        p.id,
+        to_jsonb(p) - 'id',
+        p.created_at,
+        p.updated_at
+    FROM profiles p
+    WHERE p.id = auth.uid();
+END;
+$;
+
+-- Function to delete user's own profile data (GDPR right to be forgotten)
+CREATE OR REPLACE FUNCTION delete_my_profile_data()
+RETURNS BOOLEAN
+SECURITY DEFINER
+LANGUAGE plpgsql
+AS $
+DECLARE
+    user_exists BOOLEAN;
+BEGIN
+    -- Ensure user is authenticated
+    IF auth.uid() IS NULL THEN
+        RAISE EXCEPTION 'Authentication required';
+    END IF;
+    
+    -- Check if user profile exists
+    SELECT EXISTS(SELECT 1 FROM profiles WHERE id = auth.uid()) INTO user_exists;
+    
+    IF NOT user_exists THEN
+        RAISE EXCEPTION 'Profile not found';
+    END IF;
+    
+    -- Delete user profile (this will cascade to related data due to foreign keys)
+    DELETE FROM profiles WHERE id = auth.uid();
+    
+    -- Log the deletion for compliance
+    RAISE NOTICE 'Profile deleted for user: % at %', auth.uid(), NOW();
+    
+    RETURN TRUE;
+END;
+$;
+
+-- Grant execute permissions to authenticated users
+GRANT EXECUTE ON FUNCTION get_my_profile_data() TO authenticated;
+GRANT EXECUTE ON FUNCTION delete_my_profile_data() TO authenticated;
+
+-- =====================================================
+-- ADDITIONAL SECURITY CONSTRAINTS
+-- =====================================================
+
+-- Add constraint to ensure email uniqueness
+ALTER TABLE profiles ADD CONSTRAINT profiles_email_unique UNIQUE (email);
+
+-- Add constraint to ensure phone uniqueness (if required)
+-- ALTER TABLE profiles ADD CONSTRAINT profiles_phone_unique UNIQUE (phone);
+
+-- Add check constraint for gender values
+ALTER TABLE profiles ADD CONSTRAINT profiles_gender_check 
+    CHECK (gender IS NULL OR gender IN ('male', 'female', 'other'));
+
+-- Add check constraint for valid email format
+ALTER TABLE profiles ADD CONSTRAINT profiles_email_format_check
+    CHECK (email ~ '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$');
+
+-- =====================================================
+-- SECURITY COMMENTS AND DOCUMENTATION
+-- =====================================================
+
+COMMENT ON TABLE profiles IS 'User profiles table with Row-Level Security (RLS) enabled. Users can only access their own data.';
+COMMENT ON POLICY "profiles_select_own_data" ON profiles IS 'Users can only SELECT their own profile data based on auth.uid()';
+COMMENT ON POLICY "profiles_update_own_data" ON profiles IS 'Users can only UPDATE their own profile data with validation';
+COMMENT ON POLICY "profiles_insert_own_data" ON profiles IS 'Users can only INSERT their own profile data';
+COMMENT ON POLICY "profiles_delete_own_data" ON profiles IS 'Users can only DELETE their own profile data';
+COMMENT ON FUNCTION validate_profile_data() IS 'Validates profile data integrity and enforces business rules';
+COMMENT ON FUNCTION log_profile_changes() IS 'Logs all profile changes for compliance and audit purposes';
+COMMENT ON VIEW secure_profiles IS 'Secure view that only exposes safe profile fields to authenticated users';
+
+-- =====================================================
+-- FINAL SECURITY VERIFICATION
+-- =====================================================
+
+-- Verify RLS is enabled on profiles table
+DO $
+BEGIN
+    IF NOT (SELECT relrowsecurity FROM pg_class WHERE relname = 'profiles') THEN
+        RAISE EXCEPTION 'Row Level Security is not enabled on profiles table!';
+    END IF;
+    
+    RAISE NOTICE 'Security verification passed: RLS is enabled on profiles table';
+END;
+$;-- ========
+=============================================
+-- PROFILE CHANGE REQUESTS TABLE FOR CONTROLLED UPDATES
+-- =====================================================
+
+-- Create profile change requests table
+CREATE TABLE IF NOT EXISTS profile_change_requests (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+    request_type TEXT NOT NULL CHECK (request_type IN ('profile_update', 'profile_deletion')),
+    requested_changes JSONB,
+    reason TEXT,
+    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected', 'completed')),
+    requested_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    reviewed_at TIMESTAMP WITH TIME ZONE,
+    reviewed_by UUID REFERENCES profiles(id),
+    reviewer_notes TEXT,
+    completed_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Add indexes for performance
+CREATE INDEX IF NOT EXISTS idx_profile_change_requests_user_id ON profile_change_requests(user_id);
+CREATE INDEX IF NOT EXISTS idx_profile_change_requests_status ON profile_change_requests(status);
+CREATE INDEX IF NOT EXISTS idx_profile_change_requests_type ON profile_change_requests(request_type);
+CREATE INDEX IF NOT EXISTS idx_profile_change_requests_requested_at ON profile_change_requests(requested_at);
+
+-- Enable RLS on profile change requests
+ALTER TABLE profile_change_requests ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies for profile change requests
+CREATE POLICY "users_can_view_own_change_requests" ON profile_change_requests
+    FOR SELECT 
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "users_can_create_own_change_requests" ON profile_change_requests
+    FOR INSERT 
+    WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "admins_can_view_all_change_requests" ON profile_change_requests
+    FOR SELECT 
+    USING (
+        EXISTS (
+            SELECT 1 FROM profiles 
+            WHERE id = auth.uid() AND is_admin = true
+        )
+    );
+
+CREATE POLICY "admins_can_update_change_requests" ON profile_change_requests
+    FOR UPDATE 
+    USING (
+        EXISTS (
+            SELECT 1 FROM profiles 
+            WHERE id = auth.uid() AND is_admin = true
+        )
+    );
+
+-- Add trigger for updated_at
+CREATE TRIGGER update_profile_change_requests_updated_at
+    BEFORE UPDATE ON profile_change_requests
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Function to process approved profile changes
+CREATE OR REPLACE FUNCTION process_approved_profile_change()
+RETURNS TRIGGER AS $
+DECLARE
+    change_data JSONB;
+    target_user_id UUID;
+BEGIN
+    -- Only process when status changes to 'approved'
+    IF OLD.status != 'approved' AND NEW.status = 'approved' THEN
+        target_user_id := NEW.user_id;
+        change_data := NEW.requested_changes;
+        
+        -- Process profile update requests
+        IF NEW.request_type = 'profile_update' THEN
+            -- Update the profile with the approved changes
+            UPDATE profiles 
+            SET 
+                first_name = COALESCE(change_data->>'first_name', first_name),
+                last_name = COALESCE(change_data->>'last_name', last_name),
+                phone = COALESCE(change_data->>'phone', phone),
+                address = COALESCE(change_data->>'address', address),
+                city = COALESCE(change_data->>'city', city),
+                state = COALESCE(change_data->>'state', state),
+                pincode = COALESCE(change_data->>'pincode', pincode),
+                gender = COALESCE(change_data->>'gender', gender),
+                updated_at = NOW()
+            WHERE id = target_user_id;
+            
+            -- Mark request as completed
+            NEW.completed_at = NOW();
+            NEW.status = 'completed';
+            
+        -- Process profile deletion requests
+        ELSIF NEW.request_type = 'profile_deletion' THEN
+            -- This would typically involve more complex logic
+            -- For now, we'll just mark it as completed and let admins handle manually
+            NEW.completed_at = NOW();
+            NEW.status = 'completed';
+            
+            -- Log the deletion request
+            RAISE NOTICE 'Profile deletion request approved for user: %', target_user_id;
+        END IF;
+        
+        -- Log the processing
+        RAISE NOTICE 'Profile change request processed: % for user: %', NEW.id, target_user_id;
+    END IF;
+    
+    RETURN NEW;
+END;
+$ language 'plpgsql' SECURITY DEFINER;
+
+-- Create trigger for processing approved changes
+CREATE TRIGGER process_approved_profile_change_trigger
+    BEFORE UPDATE ON profile_change_requests
+    FOR EACH ROW EXECUTE FUNCTION process_approved_profile_change();
+
+-- Add comments for documentation
+COMMENT ON TABLE profile_change_requests IS 'Stores user requests for profile changes that require approval for compliance';
+COMMENT ON COLUMN profile_change_requests.requested_changes IS 'JSONB containing the requested profile field changes';
+COMMENT ON COLUMN profile_change_requests.request_type IS 'Type of request: profile_update or profile_deletion';
+COMMENT ON FUNCTION process_approved_profile_change() IS 'Automatically processes approved profile change requests';
+
+-- Grant permissions
+GRANT SELECT, INSERT ON profile_change_requests TO authenticated;
+GRANT ALL ON profile_change_requests TO service_role;
