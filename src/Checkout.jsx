@@ -8,7 +8,7 @@ import './Checkout.css';
 
 const Checkout = () => {
   const { user } = useAuth();
-  const { items, getCartTotal, clearCart } = useCart();
+  const { items, cartTotal, clearCart } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -27,8 +27,8 @@ const Checkout = () => {
     is_default: false
   });
 
-  const shippingCost = getCartTotal > 500 ? 0 : 50;
-  const totalAmount = getCartTotal + shippingCost;
+  const shippingCost = cartTotal > 500 ? 0 : 50;
+  const totalAmount = cartTotal + shippingCost;
 
   useEffect(() => {
     if (!user) {
@@ -474,7 +474,7 @@ const Checkout = () => {
               <div className="summary-totals">
                 <div className="summary-row">
                   <span>Subtotal:</span>
-                  <span>₹{getCartTotal}</span>
+                  <span>₹{cartTotal}</span>
                 </div>
                 <div className="summary-row">
                   <span>Shipping:</span>

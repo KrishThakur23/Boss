@@ -611,7 +611,7 @@ export class OrderService {
    * @param {Object} cart - Cart object with items
    * @returns {Object} Cart totals
    */
-  static getCartTotal(cart) {
+  static cartTotal(cart) {
     if (!cart || !cart.items) {
       return { subtotal: 0, discount: 0, total: 0 }
     }

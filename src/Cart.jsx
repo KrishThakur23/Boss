@@ -2,8 +2,7 @@ import React, { useMemo, useCallback } from 'react';
 import { useCart } from './contexts/CartContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
-  CartLoadingSkeleton, 
-  ContextualCartLoader
+  CartLoadingSkeleton
 } from './components/LoadingComponents';
 import './Cart.css';
 
@@ -31,7 +30,7 @@ const CartItem = React.memo(({ item, index, onUpdateQuantity, onRemove }) => {
     <div className="cart-item">
       <div className="cart-item-image">
         <img 
-          src={item.image_urls?.[0] || item.imageUrl || '/placeholder-image.jpg'} 
+          src={item.image_urls && item.image_urls.length > 0 ? item.image_urls[0] : '/placeholder-image.jpg'} 
           alt={item.name}
           onError={handleImageError}
         />
@@ -198,11 +197,10 @@ const Cart = () => {
     isLoading, 
     isInitialized, 
     isStable, 
-    operationLoading,
     removeFromCart, 
     updateQuantity, 
     clearCart, 
-    getCartTotal 
+    cartTotal 
   } = useCart();
   const navigate = useNavigate();
   
@@ -306,29 +304,13 @@ const Cart = () => {
 
           <CartSummary
             items={items}
-            cartTotal={getCartTotal}
+            cartTotal={cartTotal}
             onCheckout={handleCheckout}
           />
         </div>
       </div>
       
-      {/* Contextual loading overlays for different operations */}
-      <ContextualCartLoader 
-        operationType="sync"
-        isVisible={operationLoading.sync}
-      />
-      <ContextualCartLoader 
-        operationType="add"
-        isVisible={operationLoading.add}
-      />
-      <ContextualCartLoader 
-        operationType="remove"
-        isVisible={operationLoading.remove}
-      />
-      <ContextualCartLoader 
-        operationType="clear"
-        isVisible={operationLoading.clear}
-      />
+      {/* Remove all ContextualCartLoader components - they were causing infinite re-renders */}
     </div>
   );
 };
