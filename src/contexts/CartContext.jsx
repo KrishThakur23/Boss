@@ -357,16 +357,15 @@ export const CartProvider = ({ children }) => {
 
     if (isAuthenticated && user && !isLoadingFromSupabase && loadedUserRef.current !== user.id) {
       console.log('🛒 User authenticated, loading cart from Supabase...');
-      const timer = setTimeout(() => {
-        loadCartFromSupabase();
-      }, 100);
-      
-      return () => clearTimeout(timer);
-    } else if (!isAuthenticated && state.isLoading) {
-      console.log('🛒 User not authenticated, using localStorage cart');
-      dispatch({ type: 'SET_LOADING', payload: false });
+      loadCartFromSupabase();
+    } else if (!isAuthenticated) {
+      // If user is not authenticated, ensure loading is set to false
+      // so the app can proceed with local storage cart.
+      if (state.isLoading) {
+        dispatch({ type: 'SET_LOADING', payload: false });
+      }
     }
-  }, [isAuthenticated, user?.id, state.isInitialized, isLoadingFromSupabase, loadCartFromSupabase, state.isLoading]);
+  }, [isAuthenticated, user?.id, state.isInitialized, isLoadingFromSupabase, loadCartFromSupabase]);
 
   // Stable cart operation functions
   const addToCart = useCallback(async (product) => {
