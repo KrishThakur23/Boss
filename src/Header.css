@@ -104,6 +104,7 @@
   border: 1px solid #e5e7eb;
   border-radius: 20px;
   transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  transition-delay: 0.1s;
   pointer-events: none;
 }
 
@@ -165,11 +166,13 @@
 .dynamic-text {
   display: inline-block;
   transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  transition-delay: 0.1s;
   transform: translateY(0);
 }
 
 .dynamic-text.exit {
   transform: translateY(-110%);
+  transition-delay: 0.1s;
 }
 
 /* Search Icons Container */

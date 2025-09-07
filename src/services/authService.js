@@ -4,8 +4,8 @@ export class AuthService {
   // Sign up with email and password
   static async signUp(email, password, userData = {}) {
     try {
-      console.log('AuthService: Starting sign up process for:', email);
-      console.log('AuthService: User data:', userData);
+
+
       
       // Check if Supabase is properly configured
       if (!supabase.auth) {
@@ -25,7 +25,7 @@ export class AuthService {
         }
       });
 
-      console.log('AuthService: Supabase auth response:', { data, error });
+
 
       if (error) {
         console.error('AuthService: Supabase auth error:', error);
@@ -34,7 +34,7 @@ export class AuthService {
 
       // Create user profile in users table
       if (data.user) {
-        console.log('AuthService: Creating user profile for user ID:', data.user.id);
+
         const profileResult = await this.createUserProfile(data.user.id, userData);
         
         if (profileResult.error) {
@@ -70,7 +70,7 @@ export class AuthService {
   // Sign out
   static async signOut() {
     try {
-      console.log('AuthService: Starting sign out...');
+
       
       // Method 1: Try standard sign out with timeout
       try {
@@ -82,21 +82,21 @@ export class AuthService {
         const { error } = await Promise.race([signOutPromise, timeoutPromise]);
         
         if (error) throw error;
-        console.log('AuthService: Standard sign out successful');
+
         return { error: null };
       } catch (timeoutError) {
-        console.log('AuthService: Standard sign out timed out, trying alternative methods...');
+
         
         // Method 2: Try to clear session manually
         try {
-          console.log('AuthService: Attempting manual session clear...');
+
           
           // Clear local storage
           localStorage.removeItem('sb-mjsxgsriufscurbpfkwp-auth-token');
           localStorage.removeItem('supabase.auth.token');
           
           // Try to refresh the page to clear any cached state
-          console.log('AuthService: Manual clear completed, returning success');
+
           return { error: null };
         } catch (manualError) {
           console.error('AuthService: Manual clear failed:', manualError);
@@ -136,7 +136,7 @@ export class AuthService {
   // Create user profile
   static async createUserProfile(userId, userData) {
     try {
-      console.log('AuthService: Creating user profile with data:', { userId, userData });
+
       
       const profileData = {
         id: userId,
@@ -147,7 +147,7 @@ export class AuthService {
         created_at: new Date().toISOString()
       };
       
-      console.log('AuthService: Inserting profile data:', profileData);
+
       
       const { error } = await supabase
         .from('profiles')
@@ -158,7 +158,7 @@ export class AuthService {
         throw error;
       }
       
-      console.log('AuthService: User profile created successfully');
+
       return { error: null }
     } catch (error) {
       console.error('Create user profile error:', error)
@@ -185,7 +185,7 @@ export class AuthService {
   // Get user profile
   static async getUserProfile(userId) {
     try {
-      console.log('AuthService: Getting user profile for userId:', userId);
+
       
       // First, let's test the connection
       const { data: testData, error: testError } = await supabase
@@ -198,7 +198,7 @@ export class AuthService {
         throw testError;
       }
       
-      console.log('AuthService: Connection test successful');
+
       
       const { data, error } = await supabase
         .from('profiles')
@@ -218,7 +218,7 @@ export class AuthService {
         throw error;
       }
       
-      console.log('AuthService: Retrieved user profile data:', data);
+
       return { data, error: null }
     } catch (error) {
       console.error('Get user profile error:', error)

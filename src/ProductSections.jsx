@@ -21,19 +21,17 @@ const ProductSections = () => {
     //en component mounts
   
     // No need to wait for authentication
-    console.log('🔍 Component mounted, fetching products immediately...')
     fetchProducts();
   }, []);
 
   const fetchProducts = async () => {
     try {
-      console.log('📡 Starting to fetch products...')
       setLoading(true);
       setError(null);
   
       // Call ProductService to get all products with categories
       const result = await ProductService.getProducts({ limit: 50 });
-      console.log('👉 Raw result from Supabase:', result);
+
   
       if (result.error) {
         console.error('❌ Supabase returned an error:', result.error);
@@ -43,7 +41,6 @@ const ProductSections = () => {
       const { data } = result;
   
       if (data && data.length > 0) {
-        console.log(`✅ Successfully fetched ${data.length} products`)
         const groupedProducts = groupProductsByCategory(data);
         setProductSections(groupedProducts);
       } else {
@@ -56,7 +53,7 @@ const ProductSections = () => {
       setProductSections([]);
     } finally {
       setLoading(false);
-      console.log('🏁 Product fetching complete');
+
     }
   };
   

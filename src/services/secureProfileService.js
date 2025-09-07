@@ -85,12 +85,6 @@ export class SecureProfileService {
       }
 
       // Log the request for audit
-      console.log('Profile change request created:', {
-        requestId: data.id,
-        userId: user.id,
-        changes: validatedData,
-        timestamp: new Date().toISOString()
-      });
 
       return {
         success: true,
@@ -140,11 +134,6 @@ export class SecureProfileService {
       }
 
       // Log the request for audit
-      console.log('Profile deletion request created:', {
-        requestId: data.id,
-        userId: user.id,
-        timestamp: new Date().toISOString()
-      });
 
       return {
         success: true,

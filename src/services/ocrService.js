@@ -8,7 +8,7 @@ export default class OCRService {
    */
   static async extractTextFromImage(imageFile) {
     try {
-      console.log('🔍 OCRService: Starting text extraction from image');
+
       
       if (!imageFile) {
         throw new Error('No image file provided');
@@ -22,7 +22,7 @@ export default class OCRService {
       // Create a URL for the image file
       const imageUrl = URL.createObjectURL(imageFile);
       
-      console.log('🔍 OCRService: Processing image with Tesseract...');
+
       
       // Process the image with Tesseract
       const result = await Tesseract.recognize(
@@ -31,7 +31,7 @@ export default class OCRService {
         {
           logger: m => {
             if (m.status === 'recognizing text') {
-              console.log(`🔍 OCR Progress: ${Math.round(m.progress * 100)}%`);
+              // OCR progress logging
             }
           }
         }
@@ -40,9 +40,9 @@ export default class OCRService {
       // Clean up the URL
       URL.revokeObjectURL(imageUrl);
 
-      console.log('✅ OCRService: Text extraction completed');
-      console.log('📝 Extracted text:', result.data.text);
-      console.log('🎯 Confidence:', result.data.confidence);
+
+
+
 
       return {
         text: result.data.text,
@@ -70,7 +70,7 @@ export default class OCRService {
         return [];
       }
 
-      console.log('🔍 OCRService: Extracting medicine names from text');
+
       
       // Common medicine names to look for (exact matches)
       const commonMedicineNames = [
@@ -179,7 +179,7 @@ export default class OCRService {
       });
 
       const result = Array.from(potentialMedicines);
-      console.log('✅ OCRService: Extracted potential medicine names:', result);
+
       
       return result;
     } catch (error) {
@@ -199,7 +199,7 @@ export default class OCRService {
         return {};
       }
 
-      console.log('🔍 OCRService: Extracting patient information from text');
+
       
       const lines = ocrText.split('\n').filter(line => line.trim().length > 0);
       const patientInfo = {};
@@ -233,7 +233,7 @@ export default class OCRService {
         }
       });
 
-      console.log('✅ OCRService: Extracted patient information:', patientInfo);
+
       return patientInfo;
     } catch (error) {
       console.error('❌ OCRService: Patient info extraction failed:', error);
@@ -248,7 +248,7 @@ export default class OCRService {
    */
   static async processPrescriptionImage(imageFile) {
     try {
-      console.log('🔍 OCRService: Starting prescription processing');
+
       
       // Extract text from image
       const { text, confidence, error: ocrError } = await this.extractTextFromImage(imageFile);
@@ -275,7 +275,7 @@ export default class OCRService {
         extractedAt: new Date().toISOString()
       };
 
-      console.log('✅ OCRService: Prescription processing completed:', result);
+
       return { data: result, error: null };
     } catch (error) {
       console.error('❌ OCRService: Prescription processing failed:', error);

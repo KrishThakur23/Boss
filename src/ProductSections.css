@@ -94,7 +94,7 @@
 .product-name {
   font-size: 1.1rem;
   font-weight: 600;
-  margin-bottom: 0.5rem;
+  margin: 8px 0 0.5rem 0;
   color: var(--dark-text);
 }
 
@@ -322,7 +322,7 @@
 
 .fallback-grid .product-name {
   font-weight: 600;
-  margin-bottom: 0.5rem;
+  margin: 8px 0 0.5rem 0;
   color: #374151;
 }
 

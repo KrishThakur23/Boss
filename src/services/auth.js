@@ -14,8 +14,6 @@ export class AuthService {
    */
   static async signUp(email, password, userData = {}) {
     try {
-      console.log('🔐 AuthService: Starting sign up for:', email)
-      
       // Validate input
       if (!email || !password) {
         throw new Error('Email and password are required')
@@ -42,8 +40,6 @@ export class AuthService {
       if (!authData.user) {
         throw new Error('No user data returned from sign up')
       }
-
-      console.log('✅ AuthService: User account created successfully')
 
       // Create user profile
       const profileResult = await this.createProfile(authData.user.id, {
@@ -73,8 +69,6 @@ export class AuthService {
    */
   static async signIn(email, password) {
     try {
-      console.log('🔐 AuthService: Attempting sign in for:', email)
-      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -85,7 +79,6 @@ export class AuthService {
         throw error
       }
 
-      console.log('✅ AuthService: Sign in successful')
       return { data, error: null }
     } catch (error) {
       console.error('❌ AuthService: Sign in error:', error)
@@ -99,8 +92,6 @@ export class AuthService {
    */
   static async signInWithGoogle() {
     try {
-      console.log('🔐 AuthService: Starting Google OAuth sign in')
-      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -113,7 +104,6 @@ export class AuthService {
         throw error
       }
 
-      console.log('✅ AuthService: Google OAuth initiated successfully')
       return { data, error: null }
     } catch (error) {
       console.error('❌ AuthService: Google OAuth error:', error)
@@ -127,8 +117,6 @@ export class AuthService {
    */
   static async signOut() {
     try {
-      console.log('🔐 AuthService: Starting sign out')
-      
       const { error } = await supabase.auth.signOut()
       
       if (error) {
@@ -136,7 +124,6 @@ export class AuthService {
         throw error
       }
 
-      console.log('✅ AuthService: Sign out successful')
       return { error: null }
     } catch (error) {
       console.error('❌ AuthService: Sign out error:', error)
@@ -151,8 +138,6 @@ export class AuthService {
    */
   static async resetPassword(email) {
     try {
-      console.log('🔐 AuthService: Resetting password for:', email)
-      
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`
       })
@@ -162,7 +147,6 @@ export class AuthService {
         throw error
       }
 
-      console.log('✅ AuthService: Password reset email sent')
       return { error: null }
     } catch (error) {
       console.error('❌ AuthService: Password reset error:', error)
@@ -177,8 +161,6 @@ export class AuthService {
    */
   static async updatePassword(newPassword) {
     try {
-      console.log('🔐 AuthService: Updating password')
-      
       const { error } = await supabase.auth.updateUser({
         password: newPassword
       })
@@ -188,7 +170,6 @@ export class AuthService {
         throw error
       }
 
-      console.log('✅ AuthService: Password updated successfully')
       return { error: null }
     } catch (error) {
       console.error('❌ AuthService: Password update error:', error)
@@ -208,8 +189,6 @@ export class AuthService {
    */
   static async createProfile(userId, profileData) {
     try {
-      console.log('👤 AuthService: Creating profile for user:', userId)
-      
       const profile = {
         id: userId,
         name: profileData.name || '',
@@ -230,7 +209,6 @@ export class AuthService {
         throw error
       }
 
-      console.log('✅ AuthService: Profile created successfully')
       return { data, error: null }
     } catch (error) {
       console.error('❌ AuthService: Profile creation error:', error)
@@ -245,8 +223,6 @@ export class AuthService {
    */
   static async getProfile(userId) {
     try {
-      console.log('👤 AuthService: Getting profile for user:', userId)
-      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -258,7 +234,6 @@ export class AuthService {
         throw error
       }
 
-      console.log('✅ AuthService: Profile retrieved successfully')
       return { data, error: null }
     } catch (error) {
       console.error('❌ AuthService: Get profile error:', error)
@@ -274,8 +249,6 @@ export class AuthService {
    */
   static async updateProfile(userId, updates) {
     try {
-      console.log('👤 AuthService: Updating profile for user:', userId)
-      
       const { data, error } = await supabase
         .from('profiles')
         .update(updates)
@@ -288,7 +261,6 @@ export class AuthService {
         throw error
       }
 
-      console.log('✅ AuthService: Profile updated successfully')
       return { data, error: null }
     } catch (error) {
       console.error('❌ AuthService: Profile update error:', error)

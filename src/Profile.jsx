@@ -41,7 +41,7 @@ const Profile = () => {
       
       try {
         setIsLoading(true);
-        console.log('Loading profile for user:', user.id);
+
         
         // Fetch profile from profiles table
         const { data: profile, error } = await supabase
@@ -60,7 +60,7 @@ const Profile = () => {
           throw error;
         }
         
-        console.log('Profile loaded:', profile);
+
         
         // Set form data with profile data
         const profileData = {
@@ -114,7 +114,7 @@ const Profile = () => {
   // Create initial profile if it doesn't exist
   const createInitialProfile = async () => {
     try {
-      console.log('Creating initial profile for user:', user.id);
+
       
       const initialProfile = {
         id: user.id,
@@ -144,7 +144,7 @@ const Profile = () => {
         throw error;
       }
       
-      console.log('Initial profile created:', data);
+
       setFormData(initialProfile);
       setOriginalData(initialProfile);
       
@@ -222,10 +222,10 @@ const Profile = () => {
 
   // Handle save operation
   const handleSave = async () => {
-    console.log('Save button clicked!');
-    console.log('hasChanges:', hasChanges);
-    console.log('changedFields:', changedFields);
-    console.log('formData:', formData);
+
+
+
+
     
     if (!validateForm()) {
       return;
@@ -242,7 +242,7 @@ const Profile = () => {
         changedData[field] = formData[field];
       });
 
-      console.log('Saving changed fields:', changedData);
+
 
         // Update profile in Supabase
         const { data, error } = await supabase
@@ -257,7 +257,7 @@ const Profile = () => {
           throw new Error(error.message || 'Failed to update profile');
         }
         
-        console.log('Profile updated successfully:', data);
+
         
         // Update original data to reflect saved changes
         setOriginalData({...formData});
@@ -271,7 +271,7 @@ const Profile = () => {
         setIsEditMode(false);
       } else {
         // No changes, just show success message
-        console.log('No changes to save, showing success message');
+
         setSaveSuccess(true);
         setTimeout(() => setSaveSuccess(false), 3000);
       }

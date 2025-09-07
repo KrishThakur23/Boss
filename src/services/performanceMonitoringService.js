@@ -41,7 +41,7 @@ export default class PerformanceMonitoringService {
     const startTime = performance.now();
     const trackingId = `${operationType}_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
     
-    console.log(`🚀 Performance tracking started: ${operationType} (${trackingId})`);
+    `);
     
     return {
       trackingId,
@@ -66,7 +66,7 @@ export default class PerformanceMonitoringService {
         const checkpointTime = performance.now();
         const duration = checkpointTime - startTime;
         
-        console.log(`⏱️ Checkpoint ${checkpointName}: ${duration.toFixed(2)}ms`);
+        }ms`);
         
         return {
           name: checkpointName,
@@ -97,11 +97,6 @@ export default class PerformanceMonitoringService {
       timestamp: new Date().toISOString(),
       isSlowOperation: this.isSlowOperation(trackingData.operationType, duration)
     };
-
-    console.log(
-      `${trackingData.success ? '✅' : '❌'} Performance tracking ended: ${trackingData.operationType} - ${duration}ms`,
-      performanceResult
-    );
 
     // Log to database
     try {
@@ -363,7 +358,7 @@ export default class PerformanceMonitoringService {
       
       const removedCount = logs.length - recentLogs.length;
       if (removedCount > 0) {
-        console.log(`🧹 Cleaned up ${removedCount} old performance logs`);
+
       }
     } catch (error) {
       console.warn('Failed to clear old local logs:', error);
@@ -384,6 +379,6 @@ export default class PerformanceMonitoringService {
       }, 60 * 60 * 1000); // Every hour
     }
 
-    console.log('🔧 Performance monitoring initialized');
+
   }
 }

@@ -147,7 +147,7 @@ const Checkout = () => {
         description: 'Medicine Order',
         handler: async function (response) {
           // Payment successful
-          console.log('Payment successful:', response);
+
           
           try {
             // Save order to database
@@ -169,7 +169,7 @@ const Checkout = () => {
             if (orderError) {
               console.error('Error saving order:', orderError);
             } else {
-              console.log('Order saved successfully:', savedOrder);
+
             }
             
             // Verify payment details
@@ -181,7 +181,7 @@ const Checkout = () => {
               savedOrder: savedOrder
             };
             
-            console.log('Navigating to order success page with details:', paymentDetails);
+
             
             // Navigate to order success page
             navigate('/order-success', {
@@ -191,7 +191,7 @@ const Checkout = () => {
             
             // Clear cart after a short delay to ensure navigation completes
             setTimeout(() => {
-              console.log('Clearing cart after successful payment');
+
               clearCart();
             }, 500);
             
@@ -228,7 +228,7 @@ const Checkout = () => {
       },
         modal: {
           ondismiss: function() {
-            console.log('Payment modal closed');
+
           }
         }
     };

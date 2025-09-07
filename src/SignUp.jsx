@@ -174,13 +174,6 @@ const SignUp = () => {
     setAuthError('');
     
     try {
-      console.log('Attempting sign up with:', {
-        email: formData.email,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        phone: formData.phone
-      });
-      
       // Try real sign up first
       const { error, data } = await signUp(
         formData.email, 
@@ -193,7 +186,7 @@ const SignUp = () => {
         }
       );
       
-      console.log('Sign up response:', { error, data });
+
       
       if (error) {
         console.error('Sign up error details:', error);

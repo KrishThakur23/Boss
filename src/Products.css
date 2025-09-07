@@ -638,10 +638,10 @@
 }
 
 .product-info {
-  padding: 8px !important;
+  padding: 12px !important;
   display: flex;
   flex-direction: column;
-  gap: 4px !important;
+  gap: 6px !important;
 }
 
 .product-name {
@@ -649,7 +649,7 @@
   font-weight: 700;
   color: #1e293b;
   line-height: 1.1 !important;
-  margin: 0;
+  margin: 8px 0 0 0;
   display: -webkit-box;
   -webkit-line-clamp: 1;
   line-clamp: 1;

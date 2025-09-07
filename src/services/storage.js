@@ -136,8 +136,6 @@ export class StorageService {
    */
   static async uploadProductImage(file, productId) {
     try {
-      console.log('📁 StorageService: Uploading product image for product:', productId)
-      
       // Validate file
       if (!this.validateFileType(file, this.ALLOWED_IMAGE_TYPES)) {
         throw new Error('Invalid file type. Only JPEG, PNG, WebP, and GIF images are allowed.')
@@ -150,7 +148,6 @@ export class StorageService {
       // Compress image if it's large
       let uploadFile = file
       if (file.size > 2 * 1024 * 1024) { // 2MB
-        console.log('📁 StorageService: Compressing large image')
         uploadFile = await this.compressImage(file, 0.8)
       }
 
@@ -176,7 +173,6 @@ export class StorageService {
         .from(this.BUCKETS.PRODUCTS)
         .getPublicUrl(filePath)
 
-      console.log('✅ StorageService: Product image uploaded successfully')
       return { url: urlData.publicUrl, error: null }
     } catch (error) {
       console.error('❌ StorageService: Product image upload error:', error)
@@ -192,8 +188,6 @@ export class StorageService {
    */
   static async uploadMultipleProductImages(files, productId) {
     try {
-      console.log(`📁 StorageService: Uploading ${files.length} product images for product:`, productId)
-      
       const uploadPromises = files.map(file => this.uploadProductImage(file, productId))
       const results = await Promise.all(uploadPromises)
       
@@ -209,7 +203,6 @@ export class StorageService {
         console.warn('⚠️ StorageService: Some images failed to upload:', errors)
       }
 
-      console.log(`✅ StorageService: ${urls.length}/${files.length} product images uploaded successfully`)
       return { urls, error: null }
     } catch (error) {
       console.error('❌ StorageService: Multiple product images upload error:', error)
@@ -224,8 +217,6 @@ export class StorageService {
    */
   static async deleteProductImage(filePath) {
     try {
-      console.log('📁 StorageService: Deleting product image:', filePath)
-      
       const { error } = await supabase.storage
         .from(this.BUCKETS.PRODUCTS)
         .remove([filePath])
@@ -235,7 +226,6 @@ export class StorageService {
         throw error
       }
 
-      console.log('✅ StorageService: Product image deleted successfully')
       return { error: null }
     } catch (error) {
       console.error('❌ StorageService: Delete product image error:', error)
@@ -256,8 +246,6 @@ export class StorageService {
    */
   static async uploadPrescription(file, userId, orderId = null) {
     try {
-      console.log('📁 StorageService: Uploading prescription for user:', userId)
-      
       // Validate file
       if (!this.validateFileType(file, this.ALLOWED_DOCUMENT_TYPES)) {
         throw new Error('Invalid file type. Only PDF, JPEG, and PNG files are allowed.')
@@ -289,7 +277,6 @@ export class StorageService {
         .from(this.BUCKETS.PRESCRIPTIONS)
         .getPublicUrl(filePath)
 
-      console.log('✅ StorageService: Prescription uploaded successfully')
       return { url: urlData.publicUrl, error: null }
     } catch (error) {
       console.error('❌ StorageService: Prescription upload error:', error)
@@ -304,8 +291,6 @@ export class StorageService {
    */
   static async deletePrescription(filePath) {
     try {
-      console.log('📁 StorageService: Deleting prescription:', filePath)
-      
       const { error } = await supabase.storage
         .from(this.BUCKETS.PRESCRIPTIONS)
         .remove([filePath])
@@ -315,7 +300,6 @@ export class StorageService {
         throw error
       }
 
-      console.log('✅ StorageService: Prescription deleted successfully')
       return { error: null }
     } catch (error) {
       console.error('❌ StorageService: Delete prescription error:', error)
@@ -335,8 +319,6 @@ export class StorageService {
    */
   static async uploadAvatar(file, userId) {
     try {
-      console.log('📁 StorageService: Uploading avatar for user:', userId)
-      
       // Validate file
       if (!this.validateFileType(file, this.ALLOWED_IMAGE_TYPES)) {
         throw new Error('Invalid file type. Only JPEG, PNG, WebP, and GIF images are allowed.')
@@ -371,7 +353,6 @@ export class StorageService {
         .from(this.BUCKETS.AVATARS)
         .getPublicUrl(filePath)
 
-      console.log('✅ StorageService: Avatar uploaded successfully')
       return { url: urlData.publicUrl, error: null }
     } catch (error) {
       console.error('❌ StorageService: Avatar upload error:', error)
@@ -391,8 +372,6 @@ export class StorageService {
    */
   static async listFiles(bucket, folder = '') {
     try {
-      console.log(`📁 StorageService: Listing files in ${bucket}/${folder}`)
-      
       const { data, error } = await supabase.storage
         .from(bucket)
         .list(folder)
@@ -402,7 +381,6 @@ export class StorageService {
         throw error
       }
 
-      console.log(`✅ StorageService: Found ${data?.length || 0} files`)
       return { data, error: null }
     } catch (error) {
       console.error('❌ StorageService: List files error:', error)
@@ -418,8 +396,6 @@ export class StorageService {
    */
   static async getFileMetadata(bucket, filePath) {
     try {
-      console.log(`📁 StorageService: Getting metadata for ${bucket}/${filePath}`)
-      
       const { data, error } = await supabase.storage
         .from(bucket)
         .getPublicUrl(filePath)
@@ -429,7 +405,6 @@ export class StorageService {
         throw error
       }
 
-      console.log('✅ StorageService: File metadata retrieved successfully')
       return { data, error: null }
     } catch (error) {
       console.error('❌ StorageService: Get file metadata error:', error)
@@ -445,8 +420,6 @@ export class StorageService {
    */
   static async downloadFile(bucket, filePath) {
     try {
-      console.log(`📁 StorageService: Downloading file ${bucket}/${filePath}`)
-      
       const { data, error } = await supabase.storage
         .from(bucket)
         .download(filePath)
@@ -456,7 +429,6 @@ export class StorageService {
         throw error
       }
 
-      console.log('✅ StorageService: File downloaded successfully')
       return { data, error: null }
     } catch (error) {
       console.error('❌ StorageService: Download file error:', error)
@@ -476,8 +448,6 @@ export class StorageService {
    */
   static async createBucket(bucketName, options = {}) {
     try {
-      console.log(`📁 StorageService: Creating bucket: ${bucketName}`)
-      
       const { error } = await supabase.storage
         .createBucket(bucketName, {
           public: options.public || false,
@@ -491,7 +461,6 @@ export class StorageService {
         throw error
       }
 
-      console.log('✅ StorageService: Bucket created successfully')
       return { error: null }
     } catch (error) {
       console.error('❌ StorageService: Create bucket error:', error)
@@ -506,8 +475,6 @@ export class StorageService {
    */
   static async deleteBucket(bucketName) {
     try {
-      console.log(`📁 StorageService: Deleting bucket: ${bucketName}`)
-      
       const { error } = await supabase.storage
         .deleteBucket(bucketName)
 
@@ -516,7 +483,6 @@ export class StorageService {
         throw error
       }
 
-      console.log('✅ StorageService: Bucket deleted successfully')
       return { error: null }
     } catch (error) {
       console.error('❌ StorageService: Delete bucket error:', error)
@@ -531,8 +497,6 @@ export class StorageService {
    */
   static async getBucketInfo(bucketName) {
     try {
-      console.log(`📁 StorageService: Getting info for bucket: ${bucketName}`)
-      
       const { data, error } = await supabase.storage
         .getBucket(bucketName)
 
@@ -541,7 +505,6 @@ export class StorageService {
         throw error
       }
 
-      console.log('✅ StorageService: Bucket info retrieved successfully')
       return { data, error: null }
     } catch (error) {
       console.error('❌ StorageService: Get bucket info error:', error)

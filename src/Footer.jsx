@@ -77,9 +77,6 @@ const Footer = () => {
           <div className="pe-copyright">
             <p>&copy; 2025 FlickXir India. All Rights Reserved.</p>
           </div>
-          <div className="pe-disclaimer">
-            <p><strong>Disclaimer:</strong> This is a clone for educational purposes.</p>
-          </div>
         </div>
       </div>
     </footer>

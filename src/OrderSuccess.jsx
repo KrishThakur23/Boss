@@ -14,18 +14,18 @@ const OrderSuccess = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log('OrderSuccess: Location state:', location.state);
+
     
     // Get order details from location state or URL params
     const details = location.state?.orderDetails || location.state?.paymentDetails;
     
-    console.log('OrderSuccess: Extracted details:', details);
+
     
     if (details) {
       setOrderDetails(details);
-      console.log('OrderSuccess: Setting order details');
+
     } else {
-      console.log('OrderSuccess: No order details found, checking URL params');
+
       
       // Check URL parameters as fallback
       const urlParams = new URLSearchParams(window.location.search);
@@ -33,7 +33,7 @@ const OrderSuccess = () => {
       const orderId = urlParams.get('order_id');
       
       if (paymentId && orderId) {
-        console.log('OrderSuccess: Found payment details in URL params');
+
         setOrderDetails({
           razorpay_payment_id: paymentId,
           razorpay_order_id: orderId,
@@ -43,7 +43,7 @@ const OrderSuccess = () => {
           }
         });
       } else {
-        console.log('OrderSuccess: No order details found anywhere, redirecting to home');
+
         // If no order details, redirect to home
         navigate('/');
         return;

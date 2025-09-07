@@ -13,8 +13,6 @@ export class OrderService {
    */
   static async getUserCart(userId) {
     try {
-      console.log('🛒 OrderService: Getting cart for user:', userId)
-      
       // Check if user has a cart
       let { data: cart, error: cartError } = await supabase
         .from('cart')
@@ -29,8 +27,6 @@ export class OrderService {
 
       // Create cart if it doesn't exist
       if (!cart) {
-        console.log('🛒 OrderService: Creating new cart for user:', userId)
-        
         const { data: newCart, error: createError } = await supabase
           .from('cart')
           .insert([{ user_id: userId }])
@@ -73,7 +69,6 @@ export class OrderService {
         items: cartItems || []
       }
 
-      console.log(`✅ OrderService: Cart retrieved with ${cartItems?.length || 0} items`)
       return { data: cartWithItems, error: null }
     } catch (error) {
       console.error('❌ OrderService: Get user cart error:', error)
@@ -90,8 +85,6 @@ export class OrderService {
    */
   static async addToCart(userId, productId, quantity = 1) {
     try {
-      console.log(`🛒 OrderService: Adding ${quantity}x product ${productId} to cart for user ${userId}`)
-      
       // Check product availability
       const { data: isAvailable, error: availabilityError } = await ProductService.checkProductAvailability(productId, quantity)
       
@@ -129,7 +122,6 @@ export class OrderService {
           throw updateError
         }
 
-        console.log('✅ OrderService: Cart item quantity updated')
         return { data: updatedItem, error: null }
       } else {
         // Add new item
@@ -148,7 +140,6 @@ export class OrderService {
           throw insertError
         }
 
-        console.log('✅ OrderService: Product added to cart successfully')
         return { data: newItem, error: null }
       }
     } catch (error) {
@@ -165,8 +156,6 @@ export class OrderService {
    */
   static async updateCartItemQuantity(cartItemId, quantity) {
     try {
-      console.log(`🛒 OrderService: Updating cart item ${cartItemId} quantity to ${quantity}`)
-      
       if (quantity <= 0) {
         // Remove item if quantity is 0 or negative
         return await this.removeFromCart(cartItemId)
@@ -184,7 +173,6 @@ export class OrderService {
         throw error
       }
 
-      console.log('✅ OrderService: Cart item quantity updated successfully')
       return { data, error: null }
     } catch (error) {
       console.error('❌ OrderService: Update cart item quantity error:', error)
@@ -199,8 +187,6 @@ export class OrderService {
    */
   static async removeFromCart(cartItemId) {
     try {
-      console.log('🛒 OrderService: Removing cart item:', cartItemId)
-      
       const { error } = await supabase
         .from('cart_items')
         .delete()
@@ -211,7 +197,6 @@ export class OrderService {
         throw error
       }
 
-      console.log('✅ OrderService: Cart item removed successfully')
       return { error: null }
     } catch (error) {
       console.error('❌ OrderService: Remove cart item error:', error)
@@ -226,8 +211,6 @@ export class OrderService {
    */
   static async clearCart(userId) {
     try {
-      console.log('🛒 OrderService: Clearing cart for user:', userId)
-      
       // Get user cart
       const { data: cart, error: cartError } = await this.getUserCart(userId)
       
@@ -246,7 +229,6 @@ export class OrderService {
         throw itemsError
       }
 
-      console.log('✅ OrderService: Cart cleared successfully')
       return { error: null }
     } catch (error) {
       console.error('❌ OrderService: Clear cart error:', error)
@@ -266,9 +248,6 @@ export class OrderService {
    */
   static async createOrderFromPayment(userId, orderData) {
     try {
-      console.log('📦 OrderService: Creating order from payment for user:', userId)
-      console.log('📦 OrderService: Order data:', orderData)
-      
       // Create order with the provided data
       const { data: order, error: orderError } = await supabase
         .from('orders')
@@ -293,7 +272,6 @@ export class OrderService {
         throw orderError
       }
 
-      console.log('✅ OrderService: Order created successfully:', order)
       return { data: order, error: null }
     } catch (error) {
       console.error('❌ OrderService: Create order error:', error)
@@ -309,8 +287,6 @@ export class OrderService {
    */
   static async createOrder(userId, orderData) {
     try {
-      console.log('📦 OrderService: Creating order for user:', userId)
-      
       // Get user cart
       const { data: cart, error: cartError } = await this.getUserCart(userId)
       
@@ -385,7 +361,6 @@ export class OrderService {
       // Clear cart
       await this.clearCart(userId)
 
-      console.log('✅ OrderService: Order created successfully')
       return { data: order, error: null }
     } catch (error) {
       console.error('❌ OrderService: Create order error:', error)
@@ -401,7 +376,7 @@ export class OrderService {
    */
   static async getUserOrders(userId) {
     try {
-      console.log('🛒 OrderService: Fetching orders for user:', userId);
+
       
       const { data: orders, error } = await supabase
         .from('orders')
@@ -414,7 +389,7 @@ export class OrderService {
         throw error;
       }
 
-      console.log('✅ OrderService: Successfully fetched orders:', orders);
+
       return orders;
     } catch (error) {
       console.error('❌ OrderService: Exception in getUserOrders:', error);
@@ -430,8 +405,6 @@ export class OrderService {
    */
   static async getOrderById(orderId, userId) {
     try {
-      console.log('📦 OrderService: Fetching order:', orderId)
-      
       const { data, error } = await supabase
         .from('orders')
         .select(`
@@ -450,7 +423,6 @@ export class OrderService {
         throw error
       }
 
-      console.log('✅ OrderService: Order retrieved successfully')
       return { data, error: null }
     } catch (error) {
       console.error('❌ OrderService: Get order by ID error:', error)
@@ -466,8 +438,6 @@ export class OrderService {
    */
   static async updateOrderStatus(orderId, status) {
     try {
-      console.log(`📦 OrderService: Updating order ${orderId} status to ${status}`)
-      
       const { data, error } = await supabase
         .from('orders')
         .update({ status: status })
@@ -480,7 +450,6 @@ export class OrderService {
         throw error
       }
 
-      console.log('✅ OrderService: Order status updated successfully')
       return { data, error: null }
     } catch (error) {
       console.error('❌ OrderService: Update order status error:', error)
@@ -496,8 +465,6 @@ export class OrderService {
    */
   static async cancelOrder(orderId, userId) {
     try {
-      console.log('📦 OrderService: Cancelling order:', orderId)
-      
       // Get order details
       const { data: order, error: orderError } = await this.getOrderById(orderId, userId)
       
@@ -522,7 +489,6 @@ export class OrderService {
         await ProductService.updateProductStock(item.product_id, item.quantity, true)
       }
 
-      console.log('✅ OrderService: Order cancelled successfully')
       return { data: updatedOrder, error: null }
     } catch (error) {
       console.error('❌ OrderService: Cancel order error:', error)
@@ -542,8 +508,6 @@ export class OrderService {
    */
   static async getOrderTracking(orderId, userId) {
     try {
-      console.log('📦 OrderService: Getting tracking for order:', orderId)
-      
       const { data: order, error: orderError } = await this.getOrderById(orderId, userId)
       
       if (orderError) {
@@ -594,7 +558,6 @@ export class OrderService {
         ]
       }
 
-      console.log('✅ OrderService: Order tracking retrieved successfully')
       return { data: tracking, error: null }
     } catch (error) {
       console.error('❌ OrderService: Get order tracking error:', error)

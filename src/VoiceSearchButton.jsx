@@ -32,7 +32,7 @@ const VoiceSearchButton = ({ className, 'aria-label': ariaLabel, title, searchIn
       recognition.start();
       
       recognition.onstart = () => {
-        console.log('Voice recognition started');
+
       };
       
       recognition.onresult = (event) => {
@@ -113,7 +113,7 @@ const VoiceSearchButton = ({ className, 'aria-label': ariaLabel, title, searchIn
     try {
       recognition?.stop();
     } catch (error) {
-      console.log('Recognition already stopped');
+
     }
   };
 

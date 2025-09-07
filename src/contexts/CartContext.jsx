@@ -13,7 +13,7 @@ const cartReducer = (state, action) => {
         isLoading: false,
         isInitialized: true,
         error: null,
-        isStable: true,
+        isStable: false,
         operationLoading: {
           sync: false,
           add: false,
@@ -76,7 +76,7 @@ const cartReducer = (state, action) => {
         ...state,
         items: action.payload || [],
         isLoading: false,
-        isStable: true
+        isStable: false
       };
 
     case 'ADD_TO_CART':
@@ -89,13 +89,13 @@ const cartReducer = (state, action) => {
               ? { ...item, quantity: item.quantity + 1 }
               : item
           ),
-          isStable: true
+          isStable: false
         };
       } else {
         return {
           ...state,
           items: [...state.items, action.payload],
-          isStable: true
+          isStable: false
         };
       }
 
@@ -103,7 +103,7 @@ const cartReducer = (state, action) => {
       return {
         ...state,
         items: state.items.filter(item => item.id !== action.payload),
-        isStable: true
+        isStable: false
       };
 
     case 'UPDATE_QUANTITY':
@@ -114,14 +114,14 @@ const cartReducer = (state, action) => {
             ? { ...item, quantity: Math.max(1, action.payload.quantity) }
             : item
         ),
-        isStable: true
+        isStable: false
       };
 
     case 'CLEAR_CART':
       return {
         ...state,
         items: [],
-        isStable: true
+        isStable: false
       };
 
     case 'UPDATE_ITEM_ID':
@@ -132,7 +132,13 @@ const cartReducer = (state, action) => {
             ? { ...item, id: action.payload.realId }
             : item
         ),
-        isStable: true
+        isStable: false
+      };
+
+    case 'SET_STABLE':
+      return {
+        ...state,
+        isStable: action.payload
       };
 
     default:
@@ -160,6 +166,7 @@ export const CartProvider = ({ children }) => {
   const [isLoadingFromSupabase, setIsLoadingFromSupabase] = useState(false);
   const loadedUserRef = useRef(null);
   const initializationRef = useRef(false);
+  const currentItemsRef = useRef([]);
 
   // Stable callback functions with proper dependencies
   const setOperationLoading = useCallback((operation, isLoading) => {
@@ -174,7 +181,6 @@ export const CartProvider = ({ children }) => {
     if (initializationRef.current || state.isInitialized) return;
     
     initializationRef.current = true;
-    console.log('🛒 Initializing cart from localStorage...');
     
     try {
       const savedCart = localStorage.getItem('flickxir_cart');
@@ -183,7 +189,6 @@ export const CartProvider = ({ children }) => {
       if (savedCart) {
         const parsedCart = JSON.parse(savedCart);
         if (Array.isArray(parsedCart) && parsedCart.length > 0) {
-          console.log('🛒 Found saved cart with', parsedCart.length, 'items');
           items = parsedCart;
         }
       }
@@ -202,19 +207,29 @@ export const CartProvider = ({ children }) => {
     }
   }, []); // Empty dependency array - run only once
 
+  // Update current items ref whenever items change
+  useEffect(() => {
+    currentItemsRef.current = state.items;
+  }, [state.items]);
+
   // Debounced localStorage save with stability check
   useEffect(() => {
-    if (!state.isInitialized || state.isLoading || !state.isStable) {
+    if (!state.isInitialized || state.isLoading) {
       return;
     }
 
     const timeoutId = setTimeout(() => {
-      console.log('🛒 Saving cart to localStorage:', state.items.length, 'items');
-      localStorage.setItem('flickxir_cart', JSON.stringify(state.items));
-    }, 300);
+      try {
+        localStorage.setItem('flickxir_cart', JSON.stringify(state.items));
+        // Mark as stable after successful save
+        dispatch({ type: 'SET_STABLE', payload: true });
+      } catch (error) {
+        console.error('Error saving cart to localStorage:', error);
+      }
+    }, 500);
     
     return () => clearTimeout(timeoutId);
-  }, [state.items, state.isInitialized, state.isLoading, state.isStable]);
+  }, [state.items, state.isInitialized, state.isLoading]);
 
   // Stable loadCartFromSupabase function
   const loadCartFromSupabase = useCallback(async () => {
@@ -227,7 +242,9 @@ export const CartProvider = ({ children }) => {
     dispatch({ type: 'SET_LOADING', payload: true });
 
     try {
-      console.log('🛒 Loading cart for user:', user.id);
+      
+      // Store current localStorage items as backup
+      const currentItems = currentItemsRef.current;
       
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
@@ -254,7 +271,6 @@ export const CartProvider = ({ children }) => {
       }
 
       if (!cart) {
-        console.log('🛒 Creating new cart for user:', profile.id);
         const { data: newCart, error: createError } = await supabase
           .from('cart')
           .insert({ user_id: profile.id })
@@ -281,7 +297,9 @@ export const CartProvider = ({ children }) => {
       }
 
       if (!cartItems || cartItems.length === 0) {
-        dispatch({ type: 'SET_CART_ITEMS', payload: [] });
+        // Don't overwrite localStorage cart if Supabase is empty
+        // Keep the current cart items from localStorage
+        // Don't dispatch SET_CART_ITEMS with empty array - keep current items
         loadedUserRef.current = user.id;
         return;
       }
@@ -356,7 +374,6 @@ export const CartProvider = ({ children }) => {
     if (!state.isInitialized) return;
 
     if (isAuthenticated && user && !isLoadingFromSupabase && loadedUserRef.current !== user.id) {
-      console.log('🛒 User authenticated, loading cart from Supabase...');
       loadCartFromSupabase();
     } else if (!isAuthenticated) {
       // If user is not authenticated, ensure loading is set to false

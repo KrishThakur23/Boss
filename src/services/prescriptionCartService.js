@@ -15,7 +15,7 @@ export default class PrescriptionCartService {
    */
   static async addPrescriptionItemsToCart(prescriptionItems, prescriptionId) {
     try {
-      console.log('🛒 PrescriptionCartService: Adding prescription items to cart');
+
       
       if (!prescriptionItems || prescriptionItems.length === 0) {
         throw new Error('No prescription items provided');
@@ -129,7 +129,7 @@ export default class PrescriptionCartService {
       // Log prescription cart activity
       await this.logPrescriptionCartActivity(user.id, prescriptionId, results);
 
-      console.log(`✅ Cart operation completed: ${results.success.length} success, ${results.errors.length} errors`);
+
       return { data: results, error: null };
 
     } catch (error) {

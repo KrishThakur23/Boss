@@ -86,7 +86,7 @@ const PrescriptionUpload = () => {
     setOcrProgress(0);
     
     try {
-      console.log('🔍 Processing prescription with OCR...');
+
       
       // Process the image with OCR
       const { data: ocrData, error: ocrError } = await OCRService.processPrescriptionImage(prescriptionFile);
@@ -95,14 +95,14 @@ const PrescriptionUpload = () => {
         throw new Error(`OCR processing failed: ${ocrError.message}`);
       }
 
-      console.log('📝 OCR Raw Text:', ocrData.rawText);
-      console.log('💊 Extracted Medicine Names:', ocrData.medicineNames);
+
+
 
       if (!ocrData || !ocrData.medicineNames || ocrData.medicineNames.length === 0) {
         throw new Error('No medicine names could be extracted from the prescription. Please ensure the image is clear and contains readable text.');
       }
 
-      console.log('✅ OCR completed, processing with intelligent matching...');
+
       
       // Use the new prescription matching service
       setIsSearchingProducts(true);
@@ -116,7 +116,7 @@ const PrescriptionUpload = () => {
         throw new Error('No matching data returned from prescription matching service');
       }
 
-      console.log('🎯 Matching results:', matchingData);
+
       setMatchingResults(matchingData);
 
       // Create extracted data structure for backward compatibility
@@ -163,7 +163,7 @@ const PrescriptionUpload = () => {
       const stockCheck = matchingData.summary.availability.availabilityRate === 100;
       setStockStatus(stockCheck ? 'available' : 'partial');
       
-      console.log('✅ Prescription processing completed successfully');
+
       
     } catch (error) {
       console.error('❌ Prescription processing error:', error);
@@ -299,23 +299,23 @@ const PrescriptionUpload = () => {
 
   // Test function to verify product search is working
   const testProductSearch = async () => {
-    console.log('🧪 Testing product search...');
+
     
     try {
       // Test search for metformin
       const { data: metforminResults, error: metforminError } = await ProductSearchService.fuzzySearch('metformin');
-      console.log('🔍 Metformin search results:', metforminResults);
-      console.log('❌ Metformin search error:', metforminError);
+
+
       
       // Test search for paracetamol
       const { data: paracetamolResults, error: paracetamolError } = await ProductSearchService.fuzzySearch('paracetamol');
-      console.log('🔍 Paracetamol search results:', paracetamolResults);
-      console.log('❌ Paracetamol search error:', paracetamolError);
+
+
       
       // Test direct database query
       const { data: allProducts, error: allProductsError } = await ProductSearchService.searchProductsByName('metformin');
-      console.log('📦 All products search results:', allProducts);
-      console.log('❌ All products search error:', allProductsError);
+
+
       
       // Test direct Supabase query to see what's in the table
       const { data: directQuery, error: directError } = await supabase
@@ -323,8 +323,8 @@ const PrescriptionUpload = () => {
         .select('id, name, price, in_stock')
         .limit(5);
       
-      console.log('🔍 Direct Supabase query results:', directQuery);
-      console.log('❌ Direct Supabase query error:', directError);
+
+
       
     } catch (error) {
       console.error('❌ Test failed:', error);

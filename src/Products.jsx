@@ -270,7 +270,6 @@ const Products = () => {
                <button 
                  className="refresh-cart-btn"
                  onClick={() => {
-                   console.log('🔄 Manually refreshing cart...');
                    refreshCart();
                  }}
                  style={{
@@ -452,12 +451,10 @@ const Products = () => {
                       src={getProductImage(product)} 
                       alt={product.name}
                       onError={(e) => {
-                        console.log('Image failed to load:', getProductImage(product));
                         e.target.style.display = 'none';
                         e.target.nextElementSibling.style.display = 'flex';
                       }}
                       onLoad={() => {
-                        console.log('Image loaded successfully:', getProductImage(product));
                       }}
                     />
                   ) : null}

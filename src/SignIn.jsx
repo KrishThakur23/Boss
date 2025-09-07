@@ -99,7 +99,7 @@ const SignIn = () => {
          }
        } else {
          // Success - user will be redirected by useEffect
-         console.log('Sign in successful!');
+
        }
     } catch (err) {
       setAuthError('An unexpected error occurred. Please try again.');

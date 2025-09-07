@@ -9,7 +9,7 @@ export default class ProductSearchService {
    */
   static async searchProductsByName(searchTerm) {
     try {
-      console.log('🔍 ProductSearchService: Searching for:', searchTerm);
+
       
       if (!searchTerm || searchTerm.trim().length < 2) {
         return { data: [], error: null };
@@ -44,7 +44,7 @@ export default class ProductSearchService {
         throw error;
       }
 
-      console.log(`✅ ProductSearchService: Found ${data?.length || 0} matching products`);
+
       return { data: data || [], error: null };
     } catch (error) {
       console.error('❌ ProductSearchService: Search failed:', error);
@@ -84,7 +84,7 @@ export default class ProductSearchService {
         return { data: [], error: null };
       }
 
-      console.log('🔍 ProductSearchService: Exact name search for:', searchTerm);
+
       
       // First, try to find exact name matches
       let query = supabase
@@ -149,7 +149,7 @@ export default class ProductSearchService {
         return 0;
       });
 
-      console.log(`✅ ProductSearchService: Found ${sortedResults.length} products for "${searchTerm}"`);
+
       return { data: sortedResults, error: null };
     } catch (error) {
       console.error('❌ ProductSearchService: Search failed:', error);
@@ -168,13 +168,13 @@ export default class ProductSearchService {
         return { data: [], error: null };
       }
 
-      console.log('🔍 ProductSearchService: Intelligent search for:', searchTerm);
+
       
       // Try the complex search first
       try {
         // Generate search variations using the medicine name processor
         const searchVariations = MedicineNameProcessor.generateSearchVariations(searchTerm);
-        console.log('🔄 Search variations:', searchVariations);
+
         
         const allResults = [];
         
@@ -202,7 +202,7 @@ export default class ProductSearchService {
         const sortedResults = uniqueResults.sort((a, b) => b.relevanceScore - a.relevanceScore);
         
         if (sortedResults.length > 0) {
-          console.log(`✅ ProductSearchService: Found ${sortedResults.length} products with intelligent matching`);
+
           return { data: sortedResults, error: null };
         }
       } catch (complexSearchError) {
@@ -210,7 +210,7 @@ export default class ProductSearchService {
       }
       
       // Fallback to simple search if complex search fails or returns no results
-      console.log('🔄 Falling back to simple search...');
+
       return await this.searchProductsByName(searchTerm);
       
     } catch (error) {
@@ -375,7 +375,7 @@ export default class ProductSearchService {
    */
   static async batchSearch(medicineNames) {
     try {
-      console.log('🔍 ProductSearchService: Batch search for:', medicineNames);
+
       
       if (!medicineNames || medicineNames.length === 0) {
         return { data: [], error: null };
@@ -385,7 +385,7 @@ export default class ProductSearchService {
       
       // Process each medicine name
       for (const medicineName of medicineNames) {
-        console.log(`🔍 Searching for: "${medicineName}"`);
+
         
         const { data: matches, error } = await this.intelligentFuzzySearch(medicineName);
         
@@ -408,7 +408,7 @@ export default class ProductSearchService {
         await new Promise(resolve => setTimeout(resolve, 100));
       }
       
-      console.log(`✅ ProductSearchService: Batch search completed for ${medicineNames.length} medicines`);
+
       return { data: results, error: null };
       
     } catch (error) {
@@ -424,7 +424,7 @@ export default class ProductSearchService {
    */
   static async findAlternatives(medicineName) {
     try {
-      console.log('🔍 ProductSearchService: Finding alternatives for:', medicineName);
+
       
       // First, find the primary product
       const { data: primaryMatches, error: primaryError } = await this.intelligentFuzzySearch(medicineName);
@@ -462,7 +462,7 @@ export default class ProductSearchService {
       const uniqueAlternatives = this.removeDuplicates(alternatives)
         .filter(product => product.id !== primaryProduct.id);
       
-      console.log(`✅ Found ${uniqueAlternatives.length} alternatives for "${medicineName}"`);
+
       return { data: uniqueAlternatives, error: null };
       
     } catch (error) {

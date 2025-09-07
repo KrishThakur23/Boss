@@ -13,8 +13,6 @@ export class ProductService {
    */
   static async getProducts(options = {}) {
     try {
-      console.log('🛍️ ProductService: Fetching products with options:', options)
-      
       let query = supabase
         .from(TABLES.PRODUCTS)
         .select(`
@@ -63,8 +61,6 @@ export class ProductService {
 
       const { data, error } = await query
 
-      console.log('📥 Supabase response:', { data, error })
-
       if (error) throw error
       return { data, error: null }
     } catch (error) {
@@ -80,8 +76,6 @@ export class ProductService {
    */
   static async getProductById(productId) {
     try {
-      console.log('🛍️ ProductService: Fetching product by ID:', productId)
-      
       const { data, error } = await supabase
         .from(TABLES.PRODUCTS)
         .select(`
@@ -104,7 +98,6 @@ export class ProductService {
         throw error
       }
 
-      console.log('✅ ProductService: Product retrieved successfully')
       return { data, error: null }
     } catch (error) {
       console.error('❌ ProductService: Get product by ID error:', error)
@@ -119,8 +112,6 @@ export class ProductService {
    */
   static async getFeaturedProducts(limit = 8) {
     try {
-      console.log('🛍️ ProductService: Fetching featured products, limit:', limit)
-      
       const { data, error } = await supabase
         .from(TABLES.PRODUCTS)
         .select(`
@@ -138,7 +129,6 @@ export class ProductService {
         throw error
       }
 
-      console.log(`✅ ProductService: Retrieved ${data?.length || 0} featured products`)
       return { data, error: null }
     } catch (error) {
       console.error('❌ ProductService: Get featured products error:', error)
@@ -154,8 +144,6 @@ export class ProductService {
    */
   static async searchProducts(searchTerm, options = {}) {
     try {
-      console.log('🔍 ProductService: Searching products for:', searchTerm)
-      
       const { data, error } = await supabase
         .from(TABLES.PRODUCTS)
         .select(`
@@ -172,7 +160,6 @@ export class ProductService {
         throw error
       }
 
-      console.log(`✅ ProductService: Search returned ${data?.length || 0} products`)
       return { data, error: null }
     } catch (error) {
       console.error('❌ ProductService: Search products error:', error)
@@ -188,8 +175,6 @@ export class ProductService {
    */
   static async getProductsByCategory(categoryId, options = {}) {
     try {
-      console.log('🛍️ ProductService: Fetching products by category:', categoryId)
-      
       const { data, error } = await supabase
         .from(TABLES.PRODUCTS)
         .select(`
@@ -206,7 +191,6 @@ export class ProductService {
         throw error
       }
 
-      console.log(`✅ ProductService: Retrieved ${data?.length || 0} products for category`)
       return { data, error: null }
     } catch (error) {
       console.error('❌ ProductService: Get products by category error:', error)
@@ -225,8 +209,6 @@ export class ProductService {
    */
   static async createProduct(productData) {
     try {
-      console.log('🛍️ ProductService: Creating new product:', productData.name)
-      
       const { data, error } = await supabase
         .from(TABLES.PRODUCTS)
         .insert([productData])
@@ -238,7 +220,6 @@ export class ProductService {
         throw error
       }
 
-      console.log('✅ ProductService: Product created successfully')
       return { data, error: null }
     } catch (error) {
       console.error('❌ ProductService: Create product error:', error)
@@ -254,8 +235,6 @@ export class ProductService {
    */
   static async updateProduct(productId, updates) {
     try {
-      console.log('🛍️ ProductService: Updating product:', productId)
-      
       const { data, error } = await supabase
         .from(TABLES.PRODUCTS)
         .update(updates)
@@ -268,7 +247,6 @@ export class ProductService {
         throw error
       }
 
-      console.log('✅ ProductService: Product updated successfully')
       return { data, error: null }
     } catch (error) {
       console.error('❌ ProductService: Update product error:', error)
@@ -283,8 +261,6 @@ export class ProductService {
    */
   static async deleteProduct(productId) {
     try {
-      console.log('🛍️ ProductService: Deleting product:', productId)
-      
       const { error } = await supabase
         .from(TABLES.PRODUCTS)
         .delete()
@@ -295,7 +271,6 @@ export class ProductService {
         throw error
       }
 
-      console.log('✅ ProductService: Product deleted successfully')
       return { error: null }
     } catch (error) {
       console.error('❌ ProductService: Delete product error:', error)
@@ -312,8 +287,6 @@ export class ProductService {
    */
   static async updateProductStock(productId, quantity, isAddition = true) {
     try {
-      console.log(`🛍️ ProductService: Updating stock for product ${productId}, ${isAddition ? 'adding' : 'subtracting'} ${quantity}`)
-      
       // Get current stock
       const { data: currentProduct, error: fetchError } = await this.getProductById(productId)
       
@@ -340,7 +313,6 @@ export class ProductService {
         throw error
       }
 
-      console.log('✅ ProductService: Stock updated successfully')
       return { data, error: null }
     } catch (error) {
       console.error('❌ ProductService: Update stock error:', error)
@@ -358,8 +330,6 @@ export class ProductService {
    */
   static async getCategories() {
     try {
-      console.log('🛍️ ProductService: Fetching categories')
-      
       const { data, error } = await supabase
         .from('categories')
         .select('*')
@@ -372,7 +342,6 @@ export class ProductService {
         throw error
       }
 
-      console.log(`✅ ProductService: Retrieved ${data?.length || 0} categories`)
       return { data, error: null }
     } catch (error) {
       console.error('❌ ProductService: Get categories error:', error)
@@ -387,8 +356,6 @@ export class ProductService {
    */
   static async getCategoryById(categoryId) {
     try {
-      console.log('🛍️ ProductService: Fetching category by ID:', categoryId)
-      
       const { data, error } = await supabase
         .from('categories')
         .select('*')
@@ -401,7 +368,6 @@ export class ProductService {
         throw error
       }
 
-      console.log('✅ ProductService: Category retrieved successfully')
       return { data, error: null }
     } catch (error) {
       console.error('❌ ProductService: Get category by ID error:', error)
@@ -420,8 +386,6 @@ export class ProductService {
    */
   static async addProductReview(reviewData) {
     try {
-      console.log('🛍️ ProductService: Adding product review')
-      
       const { data, error } = await supabase
         .from('product_reviews')
         .insert([reviewData])
@@ -433,7 +397,6 @@ export class ProductService {
         throw error
       }
 
-      console.log('✅ ProductService: Review added successfully')
       return { data, error: null }
     } catch (error) {
       console.error('❌ ProductService: Add review error:', error)
@@ -449,8 +412,6 @@ export class ProductService {
    */
   static async getProductReviews(productId, options = {}) {
     try {
-      console.log('🛍️ ProductService: Fetching reviews for product:', productId)
-      
       let query = supabase
         .from('product_reviews')
         .select(`
@@ -471,7 +432,6 @@ export class ProductService {
         throw error
       }
 
-      console.log(`✅ ProductService: Retrieved ${data?.length || 0} reviews`)
       return { data, error: null }
     } catch (error) {
       console.error('❌ ProductService: Get reviews error:', error)
@@ -489,8 +449,6 @@ export class ProductService {
    */
   static async getProductStats() {
     try {
-      console.log('🛍️ ProductService: Fetching product statistics')
-      
       const { data, error } = await supabase
         .from(TABLES.PRODUCTS)
         .select('in_stock, is_active, requires_prescription')
@@ -508,7 +466,6 @@ export class ProductService {
         overTheCounter: data.filter(p => !p.requires_prescription).length
       }
 
-      console.log('✅ ProductService: Statistics retrieved successfully')
       return { data: stats, error: null }
     } catch (error) {
       console.error('❌ ProductService: Get stats error:', error)
@@ -524,8 +481,6 @@ export class ProductService {
    */
   static async checkProductAvailability(productId, quantity = 1) {
     try {
-      console.log(`🛍️ ProductService: Checking availability for product ${productId}, quantity: ${quantity}`)
-      
       const { data, error } = await supabase
         .from(TABLES.PRODUCTS)
         .select('in_stock, stock_quantity')
@@ -539,7 +494,6 @@ export class ProductService {
 
       const isAvailable = data.in_stock && (data.stock_quantity || 0) >= quantity
 
-      console.log(`✅ ProductService: Availability check completed - Available: ${isAvailable}`)
       return { data: isAvailable, error: null }
     } catch (error) {
       console.error('❌ ProductService: Check availability error:', error)

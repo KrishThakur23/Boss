@@ -40,7 +40,7 @@ export class ProductService {
   }
   // Get all products with optional filtering
   static async getProducts(filters = {}) {
-    console.log("📡 getProducts called", filters);
+
     try {
       // Ensure we're using the public anon key for unauthenticated access
       let query = supabase
@@ -86,7 +86,6 @@ export class ProductService {
         query = query.range(from, to)
       }
 
-      console.log('🔍 Executing query with filters:', filters)
       const { data, error } = await query
 
       if (error) {
@@ -100,7 +99,6 @@ export class ProductService {
         throw error
       }
 
-      console.log(`✅ Successfully fetched ${data?.length || 0} products`)
       return { data, error: null }
     } catch (error) {
       console.error('🚨 Get products error:', error)

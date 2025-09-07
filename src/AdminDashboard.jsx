@@ -69,14 +69,9 @@ const AdminDashboard = () => {
 
   // Load products and categories on component mount
   useEffect(() => {
-    console.log('🔄 Component mount useEffect triggered');
-    console.log('📦 Loading products...');
     loadProducts();
-    console.log('🏷️ Loading categories...');
     loadCategories();
-    console.log('📋 Loading orders...');
     loadOrders();
-    console.log('📋 Loading donations...');
     loadDonations();
   }, []);
 
@@ -130,38 +125,30 @@ const AdminDashboard = () => {
 
   const loadOrders = async () => {
     try {
-      console.log('🔄 loadOrders called - starting to fetch orders...');
-      console.log('🔗 Supabase client:', supabase);
-      console.log('🔑 Supabase URL:', process.env.REACT_APP_SUPABASE_URL);
-      console.log('🔑 Supabase Key exists:', !!process.env.REACT_APP_SUPABASE_ANON_KEY);
-      console.log('👤 Current user:', user);
-      console.log('🔐 Is authenticated:', isAuthenticated);
-      console.log('👑 Is admin:', isAdminUser);
       
       // Check what tables are available
-      console.log('📋 Checking available tables...');
+
       try {
         const { data: tables, error: tablesError } = await supabase
           .from('information_schema.tables')
           .select('table_name')
           .eq('table_schema', 'public');
         
-        console.log('📋 Available tables:', tables?.map(t => t.table_name) || 'Error fetching tables');
       } catch (tableErr) {
-        console.log('📋 Could not check tables (normal for non-admin users):', tableErr.message);
+        // Could not check tables (normal for non-admin users)
       }
       
       setOrdersLoading(true);
       setOrdersError(null);
       
       // Test simple query first to check permissions
-      console.log('🧪 Testing basic orders table access...');
+
       const { data: testData, error: testError } = await supabase
         .from('orders')
         .select('id')
         .limit(1);
       
-      console.log('🧪 Test query result:', { testData, testError });
+
       
       if (testError) {
         console.error('❌ Test query failed - permission issue:', testError);
@@ -169,45 +156,45 @@ const AdminDashboard = () => {
       }
       
       // Check if there are any orders at all (without any filters)
-      console.log('🔍 Checking total orders count...');
+
       const { count: totalCount, error: countError } = await supabase
         .from('orders')
         .select('*', { count: 'exact', head: true });
       
-      console.log('🔍 Total orders count:', { totalCount, countError });
+
       
       // Check table structure to see what columns exist
-      console.log('🏗️ Checking orders table structure...');
+
       const { data: sampleOrder, error: sampleError } = await supabase
         .from('orders')
         .select('*')
         .limit(1);
       
-      console.log('🏗️ Sample order structure:', sampleOrder?.[0] || 'No orders found');
+
       
       // Simple query like MyOrders.jsx but without user_id filter
-      console.log('📡 Making full Supabase query to orders table...');
+
       const { data, error } = await supabase
         .from('orders')
         .select('*')
         .order('created_at', { ascending: false });
 
-      console.log('📊 Supabase response:', { data, error });
+
 
       if (error) {
         console.error('❌ Supabase error:', error);
         throw error;
       }
       
-      console.log('✅ Orders fetched successfully:', data);
-      console.log('📈 Setting orders state with:', data?.length || 0, 'orders');
+
+
       setOrders(data || []);
-      console.log('✅ Orders state updated');
+
     } catch (err) {
       console.error('❌ Error in loadOrders:', err);
       setOrdersError('Failed to load orders. Please try again.');
     } finally {
-      console.log('🏁 Setting ordersLoading to false');
+
       setOrdersLoading(false);
     }
   };
@@ -225,7 +212,7 @@ const AdminDashboard = () => {
 
       if (error) {
         // If view doesn't exist, try direct table query
-        console.log('View not found, trying direct table query...');
+
         const { data: directData, error: directError } = await supabase
           .from('donations')
           .select('*')
@@ -485,18 +472,10 @@ const AdminDashboard = () => {
   );
 
   // Debug logging
-  console.log('AdminDashboard - Auth State:', { 
-    loading, 
-    isAuthenticated, 
-    userEmail: user?.email,
-    isAdminUser,
-    adminEmail: ADMIN_EMAIL
-  });
-  
   // Show current user email for debugging
-  console.log('🔍 Current user email:', user?.email);
-  console.log('🔍 Admin email:', ADMIN_EMAIL);
-  console.log('🔍 Is admin?', isAdminUser);
+
+
+
 
   if (loading) {
     return (

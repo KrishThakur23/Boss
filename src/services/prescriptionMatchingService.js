@@ -15,7 +15,7 @@ export default class PrescriptionMatchingService {
    */
   static async processOCRResults(ocrData) {
     try {
-      console.log('🎯 PrescriptionMatchingService: Processing OCR results');
+
       
       if (!ocrData || !ocrData.medicineNames || ocrData.medicineNames.length === 0) {
         throw new Error('No medicine names found in OCR data');
@@ -29,7 +29,7 @@ export default class PrescriptionMatchingService {
         .map(name => MedicineNameProcessor.normalizeMedicineName(name))
         .filter(name => name.length > 2);
 
-      console.log(`📋 Valid medicine names: ${validMedicineNames.length}/${ocrData.medicineNames.length}`);
+
 
       if (validMedicineNames.length === 0) {
         throw new Error('No valid medicine names could be extracted from the prescription');
@@ -49,8 +49,8 @@ export default class PrescriptionMatchingService {
       const processingTime = Date.now() - startTime;
       matchingResults.processingTime = processingTime;
 
-      console.log(`✅ Prescription matching completed in ${processingTime}ms`);
-      console.log(`📊 Results: ${matchingResults.matchedMedicines.length} matched, ${matchingResults.unmatchedMedicines.length} unmatched`);
+
+
 
       return { data: matchingResults, error: null };
 

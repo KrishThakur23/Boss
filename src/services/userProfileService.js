@@ -71,7 +71,7 @@ export class UserProfileService {
   // Create user profile (for new users)
   static async createUserProfile(profileData) {
     try {
-      console.log('UserProfileService: Creating user profile with data:', profileData);
+
       
       // Add timeout to prevent hanging
       const timeoutPromise = new Promise((_, reject) => 
@@ -86,14 +86,14 @@ export class UserProfileService {
 
       const { data, error } = await Promise.race([createPromise, timeoutPromise]);
 
-      console.log('UserProfileService: createUserProfile result:', { data, error });
+
 
       if (error) {
         console.error('Error creating user profile:', error);
         throw error;
       }
 
-      console.log('UserProfileService: Profile created successfully:', data);
+
       return data;
     } catch (error) {
       console.error('UserProfileService: createUserProfile error:', error);
@@ -107,7 +107,7 @@ export class UserProfileService {
   // Check if user profile exists
   static async profileExists(userId) {
     try {
-      console.log('UserProfileService: Checking if profile exists for user:', userId);
+
       
       // Add timeout to prevent hanging
       const timeoutPromise = new Promise((_, reject) => 
@@ -122,7 +122,7 @@ export class UserProfileService {
 
       const { data, error } = await Promise.race([profilePromise, timeoutPromise]);
 
-      console.log('UserProfileService: profileExists result:', { data, error });
+
 
       if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
         console.error('Error checking profile existence:', error);
@@ -130,7 +130,7 @@ export class UserProfileService {
       }
 
       const exists = !!data;
-      console.log('UserProfileService: Profile exists:', exists);
+
       return exists;
     } catch (error) {
       console.error('UserProfileService: profileExists error:', error);
