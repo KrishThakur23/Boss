@@ -161,9 +161,47 @@ export const CartProvider = ({ children }) => {
       clear: false
     }
   });
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, ensureValidSession, refreshSession } = useAuth();
   
   const [isLoadingFromSupabase, setIsLoadingFromSupabase] = useState(false);
+
+  // Utility function to handle JWT expiration for Supabase calls
+  const withJWTRefresh = useCallback(async (apiCall, retryCount = 1) => {
+    try {
+      // Ensure we have a valid session before making API calls
+      const { error: sessionError } = await ensureValidSession();
+      
+      if (sessionError) {
+        console.error('Error ensuring valid session:', sessionError);
+        throw new Error('Session expired. Please sign in again.');
+      }
+      
+      const result = await apiCall();
+      
+      // If we get a JWT expiration error, try to refresh and retry
+      if (result.error && (result.error.code === 'PGRST303' || result.error.message?.includes('JWT expired'))) {
+        if (retryCount > 0) {
+          console.log('🔄 JWT expired, attempting to refresh session...');
+          const { error: refreshError } = await refreshSession();
+          
+          if (refreshError) {
+            console.error('Error refreshing session:', refreshError);
+            throw new Error('Session expired. Please sign in again.');
+          }
+          
+          // Retry the API call with refreshed token
+          return await withJWTRefresh(apiCall, retryCount - 1);
+        } else {
+          throw new Error('Session expired. Please sign in again.');
+        }
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('Error in withJWTRefresh:', error);
+      throw error;
+    }
+  }, [ensureValidSession, refreshSession]);
   const loadedUserRef = useRef(null);
   const initializationRef = useRef(false);
   const currentItemsRef = useRef([]);
@@ -220,7 +258,7 @@ export const CartProvider = ({ children }) => {
 
     const timeoutId = setTimeout(() => {
       try {
-        localStorage.setItem('flickxir_cart', JSON.stringify(state.items));
+      localStorage.setItem('flickxir_cart', JSON.stringify(state.items));
         // Mark as stable after successful save
         dispatch({ type: 'SET_STABLE', payload: true });
       } catch (error) {
@@ -242,15 +280,17 @@ export const CartProvider = ({ children }) => {
     dispatch({ type: 'SET_LOADING', payload: true });
 
     try {
-      
       // Store current localStorage items as backup
       const currentItems = currentItemsRef.current;
       
-      const { data: profile, error: profileError } = await supabase
+      // Get user profile with JWT refresh handling
+      const { data: profile, error: profileError } = await withJWTRefresh(async () => {
+        return await supabase
         .from('profiles')
         .select('id')
         .eq('id', user.id)
         .single();
+      });
 
       if (profileError) {
         console.error('Error getting user profile:', profileError);
@@ -258,11 +298,14 @@ export const CartProvider = ({ children }) => {
         return;
       }
 
-      let { data: cart, error: cartError } = await supabase
+      // Get or create cart with JWT refresh handling
+      let { data: cart, error: cartError } = await withJWTRefresh(async () => {
+        return await supabase
         .from('cart')
         .select('id')
         .eq('user_id', profile.id)
         .single();
+      });
 
       if (cartError && cartError.code !== 'PGRST116') {
         console.error('Error loading cart:', cartError);
@@ -271,11 +314,13 @@ export const CartProvider = ({ children }) => {
       }
 
       if (!cart) {
-        const { data: newCart, error: createError } = await supabase
+        const { data: newCart, error: createError } = await withJWTRefresh(async () => {
+          return await supabase
           .from('cart')
           .insert({ user_id: profile.id })
           .select('id')
           .single();
+        });
 
         if (createError) {
           console.error('Error creating cart:', createError);
@@ -285,10 +330,13 @@ export const CartProvider = ({ children }) => {
         cart = newCart;
       }
 
-      const { data: cartItems, error: itemsError } = await supabase
+      // Get cart items with JWT refresh handling
+      const { data: cartItems, error: itemsError } = await withJWTRefresh(async () => {
+        return await supabase
         .from('cart_items')
         .select('*')
         .eq('cart_id', cart.id);
+      });
 
       if (itemsError) {
         console.error('Error loading cart items:', itemsError);
@@ -306,10 +354,13 @@ export const CartProvider = ({ children }) => {
 
       const productIds = cartItems.map(item => item.product_id);
       
-      const { data: products, error: productsError } = await supabase
+      // Get products with JWT refresh handling
+      const { data: products, error: productsError } = await withJWTRefresh(async () => {
+        return await supabase
         .from('products')
-        .select('id, name, price, image_urls, in_stock, stock_quantity')
+          .select('id, name, price, image_url, in_stock, stock_quantity')
         .in('id', productIds);
+      });
 
       if (productsError) {
         console.error('Error loading products:', productsError);
@@ -374,13 +425,13 @@ export const CartProvider = ({ children }) => {
     if (!state.isInitialized) return;
 
     if (isAuthenticated && user && !isLoadingFromSupabase && loadedUserRef.current !== user.id) {
-      loadCartFromSupabase();
+        loadCartFromSupabase();
     } else if (!isAuthenticated) {
       // If user is not authenticated, ensure loading is set to false
       // so the app can proceed with local storage cart.
       if (state.isLoading) {
-        dispatch({ type: 'SET_LOADING', payload: false });
-      }
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
     }
   }, [isAuthenticated, user?.id, state.isInitialized, isLoadingFromSupabase, loadCartFromSupabase]);
 
@@ -417,43 +468,67 @@ export const CartProvider = ({ children }) => {
     }
   }, [isAuthenticated, user?.id, setOperationLoading]);
 
-  const removeFromCart = useCallback(async (productId) => {
+  const removeFromCart = useCallback(async (itemId) => {
     setOperationLoading('remove', true);
     
     try {
-      dispatch({ type: 'REMOVE_FROM_CART', payload: productId });
+      // Find the item to get the product_id
+      const item = state.items.find(item => item.id === itemId);
+      if (!item) {
+        console.error('Item not found in cart:', itemId);
+        return;
+      }
       
-      if (isAuthenticated && user) {
-        await supabase
+      console.log('Removing item from cart:', { itemId, productId: item.product_id, userId: user?.id });
+      
+      dispatch({ type: 'REMOVE_FROM_CART', payload: itemId });
+      
+      if (isAuthenticated && user && item.product_id) {
+        await withJWTRefresh(async () => {
+          return await supabase
           .from('cart_items')
           .delete()
-          .eq('id', productId);
+          .eq('product_id', item.product_id)
+          .eq('user_id', user.id);
+        });
       }
     } catch (error) {
       console.error('Error removing from cart database:', error);
     } finally {
       setTimeout(() => setOperationLoading('remove', false), 200);
     }
-  }, [isAuthenticated, user?.id, setOperationLoading]);
+  }, [isAuthenticated, user?.id, setOperationLoading, state.items]);
 
-  const updateQuantity = useCallback(async (productId, quantity) => {
+  const updateQuantity = useCallback(async (itemId, quantity) => {
     setOperationLoading('update', true);
     
     try {
-      dispatch({ type: 'UPDATE_QUANTITY', payload: { id: productId, quantity } });
+      // Find the item to get the product_id
+      const item = state.items.find(item => item.id === itemId);
+      if (!item) {
+        console.error('Item not found in cart for update:', itemId);
+        return;
+      }
       
-      if (isAuthenticated && user) {
-        await supabase
+      console.log('Updating quantity:', { itemId, productId: item.product_id, quantity, userId: user?.id });
+      
+      dispatch({ type: 'UPDATE_QUANTITY', payload: { id: itemId, quantity } });
+      
+      if (isAuthenticated && user && item.product_id) {
+        await withJWTRefresh(async () => {
+          return await supabase
           .from('cart_items')
           .update({ quantity: Math.max(1, quantity) })
-          .eq('id', productId);
+          .eq('product_id', item.product_id)
+          .eq('user_id', user.id);
+        });
       }
     } catch (error) {
       console.error('Error updating quantity in database:', error);
     } finally {
       setTimeout(() => setOperationLoading('update', false), 300);
     }
-  }, [isAuthenticated, user?.id, setOperationLoading]);
+  }, [isAuthenticated, user?.id, setOperationLoading, state.items]);
 
   const clearCart = useCallback(async () => {
     setOperationLoading('clear', true);
@@ -462,24 +537,30 @@ export const CartProvider = ({ children }) => {
       dispatch({ type: 'CLEAR_CART' });
       
       if (isAuthenticated && user) {
-        const { data: profile } = await supabase
+        const { data: profile } = await withJWTRefresh(async () => {
+          return await supabase
           .from('profiles')
           .select('id')
           .eq('id', user.id)
           .single();
+        });
 
         if (profile) {
-          const { data: cart } = await supabase
+          const { data: cart } = await withJWTRefresh(async () => {
+            return await supabase
             .from('cart')
             .select('id')
             .eq('user_id', profile.id)
             .single();
+          });
 
           if (cart) {
-            await supabase
+            await withJWTRefresh(async () => {
+              return await supabase
               .from('cart_items')
               .delete()
               .eq('cart_id', cart.id);
+            });
           }
         }
       }

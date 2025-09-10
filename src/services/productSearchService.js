@@ -20,19 +20,10 @@ export default class ProductSearchService {
         .select(`
           id,
           name,
-          description,
           price,
-          mrp,
-          discount_percentage,
           in_stock,
           stock_quantity,
-          dosage_form,
-          strength,
-          pack_size,
-          manufacturer,
-          generic_name,
-          requires_prescription,
-          image_urls
+          image_url
         `)
         .or(`name.ilike.%${searchTerm}%,generic_name.ilike.%${searchTerm}%`)
         .eq('is_active', true)
@@ -92,19 +83,10 @@ export default class ProductSearchService {
         .select(`
           id,
           name,
-          description,
           price,
-          mrp,
-          discount_percentage,
           in_stock,
           stock_quantity,
-          dosage_form,
-          strength,
-          pack_size,
-          manufacturer,
-          generic_name,
-          requires_prescription,
-          image_urls
+          image_url
         `)
         .eq('is_active', true);
 
@@ -231,19 +213,10 @@ export default class ProductSearchService {
         .select(`
           id,
           name,
-          description,
           price,
-          mrp,
-          discount_percentage,
           in_stock,
           stock_quantity,
-          dosage_form,
-          strength,
-          pack_size,
-          manufacturer,
-          generic_name,
-          requires_prescription,
-          image_urls
+          image_url
         `)
         .eq('is_active', true);
 

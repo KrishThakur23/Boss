@@ -454,113 +454,65 @@
   background: #dc2626;
 }
 
-/* Mobile Navigation */
-.mobile-nav-toggle {
-  display: none;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  z-index: 2000;
-  padding: 10px;
-}
 
-.hamburger-icon,
-.hamburger-icon::before,
-.hamburger-icon::after {
-  content: '';
-  display: block;
-  width: 25px;
-  height: 3px;
-  background-color: var(--dark-text);
-  border-radius: 3px;
-  transition: all 0.3s ease-in-out;
-}
-
-.hamburger-icon::before { transform: translateY(-8px); }
-.hamburger-icon::after { transform: translateY(8px); }
-
-.mobile-nav-toggle[aria-expanded="true"] .hamburger-icon {
-  background-color: transparent;
-}
-.mobile-nav-toggle[aria-expanded="true"] .hamburger-icon::before {
-  transform: translateY(0) rotate(45deg);
-}
-.mobile-nav-toggle[aria-expanded="true"] .hamburger-icon::after {
-  transform: translateY(-3px) rotate(-45deg);
-}
-
-.mobile-nav {
-  display: none;
-}
-
-.mobile-nav-link {
-  color: var(--dark-text);
-  text-decoration: none;
-  font-size: 1.3rem;
-  font-weight: 600;
-  opacity: 0;
-  transform: translateY(10px);
-  transition: opacity 0.3s ease 0.2s, transform 0.3s ease 0.2s;
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-family: inherit;
-}
-
-.mobile-nav-link svg {
-  flex-shrink: 0;
-  color: var(--medical-blue);
-}
-
-.mobile-nav.is-active .mobile-nav-link {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* Responsive Design */
+/* Responsive Design - Mobile First Approach */
 @media (max-width: 768px) {
-  .header-container {
-    padding: 1rem;
+  .header {
+    padding: 0.75rem 0; /* Reduced padding on mobile */
   }
 
+  .header-container {
+    padding: 0 1rem;
+    gap: 0.5rem; /* Reduced gap on mobile */
+  }
 
-
+  /* Hide desktop elements on mobile */
   .user-actions {
     display: none;
   }
   
-  .mobile-nav-toggle {
-    display: block;
+  .logo-section {
+    gap: 0.5rem; /* Reduced gap between logo and location */
   }
   
-  .mobile-nav {
-    position: fixed;
-    top: 73px;
-    left: 0;
-    width: 100%;
-    height: calc(100vh - 73px);
-    background: var(--white-color);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    transform: translateX(100%);
-    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 3rem 0;
-    gap: 2rem;
-    z-index: 1999;
+  .logo {
+    font-size: 1.25rem; /* Smaller logo on mobile */
   }
   
-  .mobile-nav.is-active {
-    transform: translateX(0);
+  .location-container {
+    font-size: 0.8rem; /* Smaller location text */
   }
-
+  
+  .location-add-btn {
+    padding: 0.2rem 0.6rem;
+    font-size: 0.75rem;
+  }
+  
+  /* Hide search on mobile when active */
   .header.search-active .header-search-container {
     display: none;
   }
+}
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+  .header-container {
+    padding: 0 0.75rem;
+  }
+  
+  .logo {
+    font-size: 1.1rem;
+  }
+  
+  .location-container {
+    font-size: 0.75rem;
+  }
+  
+  .location-add-btn {
+    padding: 0.15rem 0.5rem;
+    font-size: 0.7rem;
+  }
+  
 }
 
 /* Emoji icon styles */
@@ -581,21 +533,6 @@
   position: relative;
 }
 
-.mobile-user-info {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 15px;
-}
-
-.mobile-user-info .mobile-nav-link {
-  margin: 0;
-  padding: 0;
-  background: none;
-  border: none;
-  color: inherit;
-  text-decoration: none;
-}
 
 /* Cart Badge Styles */
 .cart-icon-wrapper {

@@ -50,7 +50,6 @@ export class OrderService {
             id,
             name,
             price,
-            mrp,
             image_urls,
             in_stock,
             stock_quantity,
@@ -306,8 +305,9 @@ export class OrderService {
         const itemTotal = item.product.price * item.quantity
         totalAmount += itemTotal
         
-        if (item.product.mrp && item.product.mrp > item.product.price) {
-          discountAmount += (item.product.mrp - item.product.price) * item.quantity
+        // Calculate discount if needed (using price as base)
+        if (item.product.price) {
+          discountAmount += item.product.price * item.quantity * 0.1 // 10% discount example
         }
       }
 
@@ -586,8 +586,9 @@ export class OrderService {
       const itemTotal = item.product.price * item.quantity
       subtotal += itemTotal
       
-      if (item.product.mrp && item.product.mrp > item.product.price) {
-        discount += (item.product.mrp - item.product.price) * item.quantity
+      // Calculate discount if needed (using price as base)
+      if (item.product.price) {
+        discount += item.product.price * item.quantity * 0.1 // 10% discount example
       }
     }
 

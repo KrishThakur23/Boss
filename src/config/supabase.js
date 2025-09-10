@@ -16,7 +16,16 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
   global: {
     headers: {
-      'X-Client-Info': 'flickxir-web'
+      'X-Client-Info': 'flickxir-web',
+      'Content-Type': 'application/json',
+    }
+  },
+  db: {
+    schema: 'public'
+  },
+  realtime: {
+    params: {
+      eventsPerSecond: 10
     }
   }
 })

@@ -270,11 +270,11 @@ describe('PrescriptionMatchingService', () => {
     test('should calculate summary statistics correctly', () => {
       const matchedMedicines = [
         {
-          bestMatch: { inStock: true, price: 50, mrp: 60 },
+          bestMatch: { inStock: true, price: 50 },
           confidence: 90
         },
         {
-          bestMatch: { inStock: false, price: 30, mrp: 35 },
+          bestMatch: { inStock: false, price: 30 },
           confidence: 80
         }
       ];

@@ -98,24 +98,16 @@ export default class PrescriptionMatchingService {
           bestMatch: {
             id: bestMatch.id,
             name: bestMatch.name,
-            genericName: bestMatch.generic_name,
-            manufacturer: bestMatch.manufacturer,
             price: bestMatch.price,
-            mrp: bestMatch.mrp,
-            discountPercentage: bestMatch.discount_percentage,
+            discountPercentage: 0, // No discount column available
             inStock: bestMatch.in_stock,
             stockQuantity: bestMatch.stock_quantity,
-            dosageForm: bestMatch.dosage_form,
-            strength: bestMatch.strength,
-            packSize: bestMatch.pack_size,
-            requiresPrescription: bestMatch.requires_prescription,
-            imageUrls: bestMatch.image_urls,
+            imageUrl: bestMatch.image_url,
             relevanceScore: bestMatch.relevanceScore || 0
           },
           alternatives: alternatives.map(alt => ({
             id: alt.id,
             name: alt.name,
-            genericName: alt.generic_name,
             price: alt.price,
             inStock: alt.in_stock,
             relevanceScore: alt.relevanceScore || 0
@@ -170,7 +162,7 @@ export default class PrescriptionMatchingService {
     }
 
     // Boost confidence for products with complete information
-    if (product.generic_name && product.manufacturer) {
+    if (product.name) {
       confidence += 5;
     }
 
@@ -188,13 +180,13 @@ export default class PrescriptionMatchingService {
 
     const searchLower = searchTerm.toLowerCase().trim();
     const productLower = (product.name || '').toLowerCase().trim();
-    const genericLower = (product.generic_name || '').toLowerCase().trim();
+    const nameLower = (product.name || '').toLowerCase().trim();
 
-    if (productLower === searchLower || genericLower === searchLower) {
+    if (productLower === searchLower || nameLower === searchLower) {
       return 'exact';
-    } else if (productLower.startsWith(searchLower) || genericLower.startsWith(searchLower)) {
+    } else if (productLower.startsWith(searchLower) || nameLower.startsWith(searchLower)) {
       return 'prefix';
-    } else if (productLower.includes(searchLower) || genericLower.includes(searchLower)) {
+    } else if (productLower.includes(searchLower) || nameLower.includes(searchLower)) {
       return 'partial';
     } else {
       // Check if it's a generic/brand match
@@ -227,8 +219,8 @@ export default class PrescriptionMatchingService {
     }, 0);
 
     const potentialSavings = matchedMedicines.reduce((total, med) => {
-      if (med.bestMatch.inStock && med.bestMatch.mrp && med.bestMatch.price) {
-        return total + (med.bestMatch.mrp - med.bestMatch.price);
+      if (med.bestMatch.inStock && med.bestMatch.price) {
+        return total + med.bestMatch.price;
       }
       return total;
     }, 0);

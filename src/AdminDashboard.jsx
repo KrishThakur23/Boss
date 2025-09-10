@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { useAuth } from './contexts/AuthContext';
 import { supabase } from './config/supabase';
+import { ProductService } from './services/productService';
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
@@ -14,15 +15,25 @@ const AdminDashboard = () => {
 
   // Product state
   const [productName, setProductName] = useState('');
-  const [productDescription, setProductDescription] = useState('');
   const [productPrice, setProductPrice] = useState('');
   const [productCategory, setProductCategory] = useState('');
-  const [productImage, setProductImage] = useState(null);
+  const [productImages, setProductImages] = useState([]);
   const [isProductSubmitting, setIsProductSubmitting] = useState(false);
   const [productMessage, setProductMessage] = useState('');
   const [products, setProducts] = useState([]);
   const [showProductForm, setShowProductForm] = useState(false);
   const [categories, setCategories] = useState([]);
+  
+  // New product fields
+  const [dosageForm, setDosageForm] = useState('');
+  const [strength, setStrength] = useState('');
+  const [primaryingredient, setPrimaryingredient] = useState('');
+  const [packSize, setPackSize] = useState('');
+  const [numActiveingredients, setNumActiveingredients] = useState('');
+  
+  // Edit state
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
 
   // Category management state
   const [showCategoryForm, setShowCategoryForm] = useState(false);
@@ -126,17 +137,7 @@ const AdminDashboard = () => {
   const loadOrders = async () => {
     try {
       
-      // Check what tables are available
-
-      try {
-        const { data: tables, error: tablesError } = await supabase
-          .from('information_schema.tables')
-          .select('table_name')
-          .eq('table_schema', 'public');
-        
-      } catch (tableErr) {
-        // Could not check tables (normal for non-admin users)
-      }
+      // Load orders data
       
       setOrdersLoading(true);
       setOrdersError(null);
@@ -241,55 +242,131 @@ const AdminDashboard = () => {
   }, [loading, isAuthenticated, isAdminUser, navigate]);
 
   // Product handlers
-  const handleProductImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setProductImage(file);
+  const handleProductImagesChange = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length > 0) {
+      // Limit to 5 images
+      const limitedFiles = files.slice(0, 5);
+      setProductImages(limitedFiles);
+      
+      if (files.length > 5) {
+        showToast('Only the first 5 images will be uploaded', 'warning');
+      }
     }
+  };
+
+  const removeImage = (index) => {
+    setProductImages(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleProductSubmit = async (e) => {
     e.preventDefault();
+    
+    if (isEditing) {
+      await updateProduct(e);
+      return;
+    }
+    
     setProductMessage('');
     setIsProductSubmitting(true);
     
     try {
-      let imageUrl = null;
-      if (productImage) {
-        // For now, use a placeholder image URL
-        // In production, you'd want to implement proper image upload
-        imageUrl = 'https://images.unsplash.com/photo-1584308666744-24d5b474b2f0?w=400&h=300&fit=crop&crop=center';
-      }
-
       // Find category ID from selected category name
       const selectedCategory = categories.find(cat => cat.name === productCategory);
       const categoryId = selectedCategory ? selectedCategory.id : null;
 
+      // First, create the product without images
       const product = {
         name: productName,
-        description: productDescription,
         price: parseFloat(productPrice),
         category_id: categoryId,
-        image_url: imageUrl || 'https://images.unsplash.com/photo-1584308666744-24d5b474b2f0?w=400&h=300&fit=crop&crop=center',
+        image_url: 'https://images.unsplash.com/photo-1584308666744-24d5b474b2f0?w=400&h=300&fit=crop&crop=center', // Default image
         in_stock: true,
-        is_active: true
+        is_active: true,
+        dosage_form: dosageForm || null,
+        strength: strength || null,
+        primary_ingredient: primaryingredient || null,
+        pack_size: packSize || null,
+        num_active_ingredients: numActiveingredients ? parseInt(numActiveingredients) : null
       };
 
-      const { error } = await supabase
+      const { data: productData, error: productError } = await supabase
         .from('products')
-        .insert([product]);
+        .insert([product])
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (productError) throw productError;
+
+      // Upload images if any
+      let imageUrls = [];
+      if (productImages.length > 0) {
+        setProductMessage('📤 Uploading images...');
+        console.log('🖼️ Starting upload of', productImages.length, 'images');
+        
+        for (let i = 0; i < productImages.length; i++) {
+          const file = productImages[i];
+          console.log(`📤 Uploading image ${i + 1}/${productImages.length}:`, file.name);
+          
+          try {
+            // Use the existing ProductService
+            const { url, error: uploadError } = await ProductService.uploadProductImage(file, `products/${productData.id}`);
+            
+            if (uploadError) {
+              console.error(`❌ Image ${i + 1} upload error:`, uploadError);
+              setProductMessage(`❌ Failed to upload image ${i + 1}: ${uploadError.message}`);
+            } else if (url) {
+              console.log(`✅ Image ${i + 1} uploaded successfully:`, url);
+              imageUrls.push(url);
+            } else {
+              console.error(`❌ Image ${i + 1} upload failed: No URL returned`);
+              setProductMessage(`❌ Failed to upload image ${i + 1}: No URL returned`);
+            }
+          } catch (uploadError) {
+            console.error(`❌ Image ${i + 1} upload exception:`, uploadError);
+            setProductMessage(`❌ Failed to upload image ${i + 1}: ${uploadError.message}`);
+          }
+        }
+
+        console.log('🖼️ Upload complete. Successfully uploaded:', imageUrls.length, 'images');
+
+        // Update product with image URLs
+        if (imageUrls.length > 0) {
+          console.log('🔄 Updating product with image URLs:', imageUrls);
+          
+          const { error: updateError } = await supabase
+            .from('products')
+            .update({ 
+              image_urls: imageUrls,
+              image_url: imageUrls[0] // Set first image as primary
+            })
+            .eq('id', productData.id);
+
+          if (updateError) {
+            console.error('❌ Error updating product with images:', updateError);
+            setProductMessage(`❌ Product created but failed to update with images: ${updateError.message}`);
+          } else {
+            console.log('✅ Product updated with image URLs successfully');
+          }
+        } else {
+          console.log('⚠️ No images were uploaded successfully');
+          setProductMessage('⚠️ Product created but no images were uploaded');
+        }
+      }
 
       setProductMessage('✅ Product added successfully!');
       setProductName('');
-      setProductDescription('');
       setProductPrice('');
       setProductCategory('');
-      setProductImage(null);
+      setProductImages([]);
+      setDosageForm('');
+      setStrength('');
+      setPrimaryingredient('');
+      setPackSize('');
+      setNumActiveingredients('');
       setShowProductForm(false);
       
-      showToast('Product added successfully!', 'success');
+      showToast(`Product added successfully! ${imageUrls.length > 0 ? `(${imageUrls.length} images uploaded)` : ''}`, 'success');
       loadProducts();
     } catch (error) {
       setProductMessage(`❌ Error: ${error.message}`);
@@ -297,6 +374,88 @@ const AdminDashboard = () => {
     } finally {
       setIsProductSubmitting(false);
     }
+  };
+
+  const editProduct = (product) => {
+    setEditingProduct(product);
+    setIsEditing(true);
+    setProductName(product.name);
+    setProductPrice(product.price.toString());
+    setProductCategory(product.categories?.name || '');
+    setDosageForm(product.dosage_form || '');
+    setStrength(product.strength || '');
+    setPrimaryingredient(product.primary_ingredient || '');
+    setPackSize(product.pack_size || '');
+    setNumActiveingredients(product.num_active_ingredients?.toString() || '');
+    setProductImages([]);
+    setShowProductForm(true);
+  };
+
+  const updateProduct = async (e) => {
+    e.preventDefault();
+    setProductMessage('');
+    setIsProductSubmitting(true);
+    
+    try {
+      // Find category ID from selected category name
+      const selectedCategory = categories.find(cat => cat.name === productCategory);
+      const categoryId = selectedCategory ? selectedCategory.id : null;
+
+      const updateData = {
+        name: productName,
+        price: parseFloat(productPrice),
+        category_id: categoryId,
+        dosage_form: dosageForm || null,
+        strength: strength || null,
+        primary_ingredient: primaryingredient || null,
+        pack_size: packSize || null,
+        num_active_ingredients: numActiveingredients ? parseInt(numActiveingredients) : null
+      };
+
+      const { error } = await supabase
+        .from('products')
+        .update(updateData)
+        .eq('id', editingProduct.id);
+
+      if (error) throw error;
+
+      setProductMessage('✅ Product updated successfully!');
+      setIsEditing(false);
+      setEditingProduct(null);
+      setProductName('');
+      setProductPrice('');
+      setProductCategory('');
+      setDosageForm('');
+      setStrength('');
+      setPrimaryingredient('');
+      setPackSize('');
+      setNumActiveingredients('');
+      setProductImages([]);
+      setShowProductForm(false);
+      
+      showToast('Product updated successfully!', 'success');
+      loadProducts();
+    } catch (error) {
+      setProductMessage(`❌ Error: ${error.message}`);
+      showToast(`Error: ${error.message}`, 'error');
+    } finally {
+      setIsProductSubmitting(false);
+    }
+  };
+
+  const cancelEdit = () => {
+    setIsEditing(false);
+    setEditingProduct(null);
+    setProductName('');
+    setProductPrice('');
+    setProductCategory('');
+    setDosageForm('');
+    setStrength('');
+    setPrimaryingredient('');
+    setPackSize('');
+    setNumActiveingredients('');
+    setProductImages([]);
+    setShowProductForm(false);
   };
 
   const deleteProduct = async (id) => {
@@ -672,7 +831,7 @@ const AdminDashboard = () => {
                   <div className="form-card">
                     <div className="form-card-header">
                       <div className="card-icon">📦</div>
-                      <h3>Product Information</h3>
+                      <h3>{isEditing ? 'Edit Product Information' : 'Product Information'}</h3>
                     </div>
                     <div className="form-card-content">
                       <div className="form-row">
@@ -687,13 +846,54 @@ const AdminDashboard = () => {
                           />
                         </div>
                         <div className="form-field">
-                          <label className="form-label">Description</label>
-                          <textarea 
-                            className="form-textarea" 
-                            value={productDescription} 
-                            onChange={(e) => setProductDescription(e.target.value)} 
-                            rows={4} 
-                            placeholder="Detailed description of the product..." 
+                          <label className="form-label">Strength</label>
+                          <input 
+                            className="form-input" 
+                            value={strength} 
+                            onChange={(e) => setStrength(e.target.value)} 
+                            placeholder="e.g., 500mg" 
+                          />
+                        </div>
+                      </div>
+                      <div className="form-row">
+                        <div className="form-field">
+                          <label className="form-label">Dosage Form</label>
+                          <input 
+                            className="form-input" 
+                            value={dosageForm} 
+                            onChange={(e) => setDosageForm(e.target.value)} 
+                            placeholder="e.g., Tablet, Capsule, Syrup" 
+                          />
+                        </div>
+                        <div className="form-field">
+                          <label className="form-label">Primary Ingredient</label>
+                          <input 
+                            className="form-input" 
+                            value={primaryingredient} 
+                            onChange={(e) => setPrimaryingredient(e.target.value)} 
+                            placeholder="e.g., Paracetamol" 
+                          />
+                        </div>
+                      </div>
+                      <div className="form-row">
+                        <div className="form-field">
+                          <label className="form-label">Pack Size</label>
+                          <input 
+                            className="form-input" 
+                            value={packSize} 
+                            onChange={(e) => setPackSize(e.target.value)} 
+                            placeholder="e.g., 10 tablets, 100ml" 
+                          />
+                        </div>
+                        <div className="form-field">
+                          <label className="form-label">Number of Active Ingredients</label>
+                          <input 
+                            className="form-input" 
+                            type="number"
+                            min="1"
+                            value={numActiveingredients} 
+                            onChange={(e) => setNumActiveingredients(e.target.value)} 
+                            placeholder="e.g., 1, 2, 3" 
                           />
                         </div>
                       </div>
@@ -741,22 +941,53 @@ const AdminDashboard = () => {
                     </div>
                   </div>
 
-                  {/* Image Upload Card */}
+                  {/* Multiple Images Upload Card */}
                   <div className="form-card">
                     <div className="form-card-header">
                       <div className="card-icon">🖼️</div>
-                      <h3>Product Image</h3>
+                      <h3>Product Images</h3>
                     </div>
                     <div className="form-card-content">
                       <div className="form-field">
                         <input 
                           type="file" 
                           accept="image/*" 
-                          onChange={handleProductImageChange}
+                          multiple
+                          onChange={handleProductImagesChange}
                           className="file-input-simple"
                         />
-                        <div className="helper-text">Upload a clear image of the product (optional)</div>
+                        <div className="helper-text">Upload multiple images of the product (optional, max 5 images)</div>
                       </div>
+                      
+                      {/* Image Previews */}
+                      {productImages.length > 0 && (
+                        <div className="image-previews">
+                          <h4>Selected Images ({productImages.length}/5):</h4>
+                          <div className="preview-grid">
+                            {productImages.map((file, index) => (
+                              <div key={index} className="image-preview">
+                                <img 
+                                  src={URL.createObjectURL(file)} 
+                                  alt={`Preview ${index + 1}`}
+                                  className="preview-image"
+                                />
+                                <button 
+                                  type="button"
+                                  onClick={() => removeImage(index)}
+                                  className="remove-image-btn"
+                                  title="Remove image"
+                                >
+                                  ❌
+                                </button>
+                                <div className="image-info">
+                                  <span className="image-name">{file.name}</span>
+                                  <span className="image-size">{(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -765,7 +996,7 @@ const AdminDashboard = () => {
                     <button 
                       className="btn-secondary" 
                       type="button" 
-                      onClick={() => setShowProductForm(false)}
+                      onClick={isEditing ? cancelEdit : () => setShowProductForm(false)}
                     >
                       <span className="btn-icon">❌</span>
                       Cancel
@@ -778,12 +1009,12 @@ const AdminDashboard = () => {
                       {isProductSubmitting ? (
                         <>
                           <span className="loading-spinner"></span>
-                          Adding...
+                          {isEditing ? 'Updating...' : 'Adding...'}
                         </>
                       ) : (
                         <>
                           <span className="btn-icon">✅</span>
-                          Add Product
+                          {isEditing ? 'Update Product' : 'Add Product'}
                         </>
                       )}
                     </button>
@@ -857,6 +1088,16 @@ const AdminDashboard = () => {
                           </p>
                         )}
                         <div className="product-actions">
+                          <button 
+                            className="btn-secondary"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              editProduct(product);
+                            }}
+                          >
+                            <span className="btn-icon">✏️</span>
+                            Edit
+                          </button>
                           <button 
                             className="btn-danger"
                             onClick={(e) => {

@@ -243,7 +243,6 @@ export default class PrescriptionCartService {
           products (
             name,
             price,
-            mrp,
             manufacturer,
             requires_prescription,
             in_stock

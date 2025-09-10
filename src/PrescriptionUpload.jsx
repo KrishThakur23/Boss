@@ -129,7 +129,6 @@ const PrescriptionUpload = () => {
           quantity: 1, // Default quantity, can be adjusted by user
           inStock: match.bestMatch?.inStock || false,
           price: match.bestMatch?.price || 0,
-          mrp: match.bestMatch?.mrp || 0,
           discount: match.bestMatch?.discountPercentage || 0,
           manufacturer: match.bestMatch?.manufacturer || 'Unknown',
           genericName: match.bestMatch?.genericName || '',
@@ -715,9 +714,6 @@ const PrescriptionUpload = () => {
                                 </span>
                                 <div className="price-info">
                                   <p className="price">₹{medicine.price}</p>
-                                  {medicine.mrp && medicine.mrp > medicine.price && (
-                                    <p className="mrp">MRP: ₹{medicine.mrp}</p>
-                                  )}
                                   {medicine.discount > 0 && (
                                     <p className="discount">{medicine.discount}% OFF</p>
                                   )}

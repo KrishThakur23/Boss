@@ -288,9 +288,6 @@ export const MedicineMatchResult = ({
       <div className="product-details">
         <div className="price-info">
           <span className="price">₹{matchedProduct.price}</span>
-          {matchedProduct.mrp && matchedProduct.mrp > matchedProduct.price && (
-            <span className="mrp">MRP: ₹{matchedProduct.mrp}</span>
-          )}
         </div>
         
         <div className="availability">

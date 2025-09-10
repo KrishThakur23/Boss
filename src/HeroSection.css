@@ -2,9 +2,24 @@
 .hero-section {
   background: var(--white-color);
   padding: 1.25rem 0;
+  padding-top: 5rem; /* Add top padding to account for fixed header */
   text-align: center;
   color: var(--dark-text);
   border-bottom: 1px solid #e5e7eb;
+  margin-top: 0; /* Ensure no margin */
+}
+
+/* Mobile responsive hero section */
+@media (max-width: 768px) {
+  .hero-section {
+    padding-top: 4.5rem; /* Match mobile header height (70px) */
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-section {
+    padding-top: 4rem; /* Match small mobile header height (65px) */
+  }
 }
 
 .hero-content h1 {

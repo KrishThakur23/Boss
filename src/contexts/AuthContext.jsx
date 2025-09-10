@@ -125,6 +125,53 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
+  // Refresh session function to handle JWT expiration
+  const refreshSession = async () => {
+    try {
+      const { data, error } = await supabase.auth.refreshSession()
+      
+      if (error) {
+        console.error('Error refreshing session:', error)
+        return { error }
+      }
+
+      if (data.session) {
+        setSession(data.session)
+        setUser(data.session.user)
+      }
+
+      return { data, error: null }
+    } catch (error) {
+      console.error('Error refreshing session:', error)
+      return { error }
+    }
+  }
+
+  // Check if session is valid and refresh if needed
+  const ensureValidSession = async () => {
+    try {
+      const { data: { session: currentSession } } = await supabase.auth.getSession()
+      
+      if (!currentSession) {
+        return { error: { message: 'No active session' } }
+      }
+
+      // Check if token is expired (with 5 minute buffer)
+      const now = Math.floor(Date.now() / 1000)
+      const expiresAt = currentSession.expires_at
+      
+      if (expiresAt && (expiresAt - now) < 300) { // 5 minutes buffer
+        console.log('🔄 Token expiring soon, refreshing...')
+        return await refreshSession()
+      }
+
+      return { data: { session: currentSession }, error: null }
+    } catch (error) {
+      console.error('Error ensuring valid session:', error)
+      return { error }
+    }
+  }
+
   const value = {
     user,
     session,
@@ -133,7 +180,9 @@ export const AuthProvider = ({ children }) => {
     signUp,
     signIn,
     signInWithGoogle,
-    resetPassword
+    resetPassword,
+    refreshSession,
+    ensureValidSession
   }
 
   return (

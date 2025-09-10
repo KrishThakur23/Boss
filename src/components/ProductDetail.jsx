@@ -17,7 +17,7 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [relatedProducts, setRelatedProducts] = useState([]);
-  const [activeTab, setActiveTab] = useState('description');
+  const [activeTab, setActiveTab] = useState('specifications');
   const [reviews, setReviews] = useState([]);
   const [showImageModal, setShowImageModal] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
@@ -45,21 +45,21 @@ const ProductDetail = () => {
     }
   }, [getCartItem, updateQuantity, removeFromCart]);
 
-  const handleAddToCart = useCallback((productToAdd) => {
+  const handleAddToCart = useCallback(async (productToAdd) => {
     if (!isAuthenticated) {
       navigate('/signup');
       return;
     }
-    
-    // If no product is passed, use the current product with selected quantity
-    const productData = productToAdd || (product ? { ...product, quantity } : null);
-    
-    if (productData) {
-      addToCart(productData);
-      setShowSuccessMessage(true);
-      setTimeout(() => setShowSuccessMessage(false), 3000);
+
+    try {
+      // Use the same logic as Products page - just pass the product directly
+      const productData = productToAdd || product;
+      await addToCart(productData);
+      alert('Product added to cart!');
+    } catch (error) {
+      alert('Failed to add product to cart');
     }
-  }, [addToCart, isAuthenticated, navigate, product, quantity]);
+  }, [addToCart, isAuthenticated, navigate, product]);
 
   // Horizontal Quantity Controls Component for Recommended Products
   const HorizontalQuantityControls = ({ product, quantity, isLoading }) => (
@@ -334,7 +334,28 @@ const ProductDetail = () => {
 
             {/* Product Info */}
             <div className="product-info">
-              <h1 className="product-title">{product.name}</h1>
+              <div className="product-title-section">
+                <h1 className="product-title">{product.name}</h1>
+                {getCartItem(product.id) && (
+                  <div className="in-cart-badge">
+                    <span className="cart-icon">🛒</span>
+                    <span>In Cart ({getCartItem(product.id).quantity})</span>
+                  </div>
+                )}
+              </div>
+
+              {/* ADD TO CART BUTTON - RIGHT AFTER TITLE */}
+              <button
+                className={`add-to-cart-btn ${!product.in_stock ? 'disabled' : ''}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAddToCart(product);
+                }}
+                disabled={!product.in_stock}
+              >
+                {product.in_stock ? '🛒 Add to Cart' : 'Out of Stock'}
+              </button>
+              
 
               <div className="product-meta">
                 <div className="product-category">
@@ -358,37 +379,12 @@ const ProductDetail = () => {
                 )}
               </div>
 
-              <div className="product-description">
-                <p>{product.description}</p>
-              </div>
+              {product.description && (
+                <div className="product-description">
+                  <p>{product.description}</p>
+                </div>
+              )}
 
-              {/* Product Specifications */}
-              <div className="product-specs">
-                {product.strength && (
-                  <div className="spec-item">
-                    <span className="spec-label">Strength:</span>
-                    <span className="spec-value">{product.strength}</span>
-                  </div>
-                )}
-                {product.dosage_form && (
-                  <div className="spec-item">
-                    <span className="spec-label">Dosage Form:</span>
-                    <span className="spec-value">{product.dosage_form}</span>
-                  </div>
-                )}
-                {product.manufacturer && (
-                  <div className="spec-item">
-                    <span className="spec-label">Manufacturer:</span>
-                    <span className="spec-value">{product.manufacturer}</span>
-                  </div>
-                )}
-                {product.sku && (
-                  <div className="spec-item">
-                    <span className="spec-label">SKU:</span>
-                    <span className="spec-value">{product.sku}</span>
-                  </div>
-                )}
-              </div>
 
               {/* Big Description Section */}
               {product.big_description && (
@@ -403,6 +399,90 @@ const ProductDetail = () => {
                   </div>
                 </div>
               )}
+
+              {/* Add to Cart / Quantity Controls */}
+              {(() => {
+                const cartItem = getCartItem(product.id);
+                const isInCart = !!cartItem;
+                const cartQuantity = cartItem ? cartItem.quantity : 0;
+                
+                if (isInCart) {
+                  // Product is already in cart - show quantity controls
+                  return (
+                    <div style={{ marginBottom: '20px' }}>
+                      <div style={{ marginBottom: '10px', fontSize: '14px', color: '#666' }}>
+                        Quantity in Cart: {cartQuantity}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <button
+                          onClick={() => handleUpdateQuantity(product.id, cartQuantity - 1)}
+                          disabled={operationLoading || cartQuantity <= 1}
+                          style={{
+                            backgroundColor: '#dc2626',
+                            color: 'white',
+                            padding: '8px 12px',
+                            fontSize: '16px',
+                            fontWeight: 'bold',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            minWidth: '40px'
+                          }}
+                        >
+                          -
+                        </button>
+                        <span style={{ 
+                          fontSize: '18px', 
+                          fontWeight: 'bold', 
+                          minWidth: '30px', 
+                          textAlign: 'center' 
+                        }}>
+                          {cartQuantity}
+                        </span>
+                        <button
+                          onClick={() => handleUpdateQuantity(product.id, cartQuantity + 1)}
+                          disabled={operationLoading || cartQuantity >= (product.stock_quantity || 10)}
+                          style={{
+                            backgroundColor: '#16a34a',
+                            color: 'white',
+                            padding: '8px 12px',
+                            fontSize: '16px',
+                            fontWeight: 'bold',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            minWidth: '40px'
+                          }}
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  );
+                } else {
+                  // Product not in cart - show add to cart button
+                  return (
+                    <button
+                      onClick={handleAddToCart}
+                      style={{
+                        backgroundColor: 'rgb(8, 145, 178)',
+                        color: 'white',
+                        padding: '15px 30px',
+                        fontSize: '16px',
+                        fontWeight: 'bold',
+                        border: 'none',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        margin: '20px 0px',
+                        display: 'block',
+                        width: '200px'
+                      }}
+                    >
+                      Add to Cart
+                    </button>
+                  );
+                }
+              })()}
 
               {/* Stock Status */}
               <div className="stock-status">
@@ -424,45 +504,12 @@ const ProductDetail = () => {
                 </div>
               )}
 
-              {/* Add to Cart Section */}
-              <div className="add-to-cart-section">
-                <div className="quantity-selector">
-                  <label htmlFor="quantity">Quantity:</label>
-                  <div className="quantity-controls">
-                    <button
-                      onClick={() => handleQuantityChange(quantity - 1)}
-                      disabled={quantity <= 1}
-                      className="quantity-btn"
-                    >
-                      -
-                    </button>
-                    <input
-                      type="number"
-                      id="quantity"
-                      value={quantity}
-                      onChange={(e) => handleQuantityChange(parseInt(e.target.value) || 1)}
-                      min="1"
-                      max={product.stock_quantity || 10}
-                      className="quantity-input"
-                    />
-                    <button
-                      onClick={() => handleQuantityChange(quantity + 1)}
-                      disabled={quantity >= (product.stock_quantity || 10)}
-                      className="quantity-btn"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-
-                <button
-                  onClick={handleAddToCart}
-                  disabled={!product.in_stock}
-                  className="add-to-cart-btn"
-                >
-                  {product.in_stock ? 'Add to Cart' : 'Out of Stock'}
-                </button>
-              </div>
+              <button
+                onClick={handleAddToCart}      
+                className="add-to-cart-btn"               
+              >
+                Add to Cart
+              </button>
 
 
             </div>
@@ -480,16 +527,10 @@ const ProductDetail = () => {
           <section className="product-tabs">
             <div className="tab-navigation">
               <button
-                className={`tab-btn ${activeTab === 'description' ? 'active' : ''}`}
-                onClick={() => setActiveTab('description')}
-              >
-                Description
-              </button>
-              <button
                 className={`tab-btn ${activeTab === 'specifications' ? 'active' : ''}`}
                 onClick={() => setActiveTab('specifications')}
               >
-                Specifications
+                Description
               </button>
               <button
                 className={`tab-btn ${activeTab === 'reviews' ? 'active' : ''}`}
@@ -506,46 +547,38 @@ const ProductDetail = () => {
             </div>
 
             <div className="tab-content">
-              {activeTab === 'description' && (
-                <div className="tab-panel">
-                  <h3>Product Description</h3>
-                  <p>{product.description}</p>
-                  {product.big_description && (
-                    <div className="detailed-description">
-                      {product.big_description.split('\n').map((paragraph, index) => (
-                        <p key={index}>{paragraph}</p>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-
               {activeTab === 'specifications' && (
                 <div className="tab-panel">
-                  <h3>Product Specifications</h3>
+                  <h3>Product Description</h3>
                   <div className="specifications-table">
-                    {product.strength && (
-                      <div className="spec-row">
-                        <span className="spec-label">Strength</span>
-                        <span className="spec-value">{product.strength}</span>
-                      </div>
-                    )}
                     {product.dosage_form && (
                       <div className="spec-row">
                         <span className="spec-label">Dosage Form</span>
                         <span className="spec-value">{product.dosage_form}</span>
                       </div>
                     )}
-                    {product.manufacturer && (
+                    {product.strength && (
                       <div className="spec-row">
-                        <span className="spec-label">Manufacturer</span>
-                        <span className="spec-value">{product.manufacturer}</span>
+                        <span className="spec-label">Strength</span>
+                        <span className="spec-value">{product.strength}</span>
                       </div>
                     )}
-                    {product.sku && (
+                    {product.primary_ingredient && (
                       <div className="spec-row">
-                        <span className="spec-label">SKU</span>
-                        <span className="spec-value">{product.sku}</span>
+                        <span className="spec-label">Primary Ingredient</span>
+                        <span className="spec-value">{product.primary_ingredient}</span>
+                      </div>
+                    )}
+                    {product.pack_size && (
+                      <div className="spec-row">
+                        <span className="spec-label">Pack Size</span>
+                        <span className="spec-value">{product.pack_size}</span>
+                      </div>
+                    )}
+                    {product.num_active_ingredients && (
+                      <div className="spec-row">
+                        <span className="spec-label">Number of Active Ingredients</span>
+                        <span className="spec-value">{product.num_active_ingredients}</span>
                       </div>
                     )}
                     <div className="spec-row">

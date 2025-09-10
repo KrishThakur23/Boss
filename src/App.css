@@ -1,18 +1,33 @@
+/* Mobile-first responsive base styles */
 .App {
   text-align: center;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  width: 100%;
+  overflow-x: hidden; /* Prevent horizontal scroll */
 }
 
 .main-content {
   flex: 1;
   min-height: calc(100vh - 200px); /* Adjust based on your header/footer heights */
+  width: 100%;
+  padding-top: 0; /* Remove padding to connect hero section with header */
 }
 
-/* Ensure the app takes full height */
-.App {
-  min-height: 100vh;
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .main-content {
+    padding-top: 0; /* Remove padding on mobile too */
+    min-height: calc(100vh - 150px);
+  }
+}
+
+@media (max-width: 480px) {
+  .main-content {
+    padding-top: 0; /* Remove padding on small mobile */
+    min-height: calc(100vh - 140px);
+  }
 }
 
 /* Remove the old App-logo styles if not needed */

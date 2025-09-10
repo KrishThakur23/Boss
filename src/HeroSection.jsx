@@ -129,7 +129,7 @@ const HeroSection = forwardRef(({ currentSearchTerm }, ref) => {
     <section className="hero-section" ref={ref}>
       <div className="container">
         <div className="hero-content">
-          <h1>What are you looking for?</h1>
+          <h1>Search for essentials</h1>
           <p>Find medicines, lab tests, and more</p>
 
           {/* Search Bar */}

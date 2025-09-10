@@ -7,7 +7,7 @@ import {
 import './Cart.css';
 
 // Memoized CartItem component to prevent unnecessary re-renders
-const CartItem = React.memo(({ item, index, onUpdateQuantity, onRemove }) => {
+const CartItem = React.memo(({ item, index, onUpdateQuantity, onRemove, onProductClick }) => {
   const handleQuantityDecrease = useCallback(() => {
     onUpdateQuantity(item.id, item.quantity - 1);
   }, [item.id, item.quantity, onUpdateQuantity]);
@@ -24,14 +24,24 @@ const CartItem = React.memo(({ item, index, onUpdateQuantity, onRemove }) => {
     e.target.src = '/placeholder-image.jpg';
   }, []);
 
-  const subtotal = useMemo(() => item.price * item.quantity, [item.price, item.quantity]);
+  const handleProductClick = useCallback(() => {
+    if (onProductClick && item.product_id) {
+      onProductClick(item.product_id);
+    }
+  }, [onProductClick, item.product_id]);
+
+  const subtotal = useMemo(() => {
+    const price = parseFloat(item.price) || 0;
+    const quantity = parseInt(item.quantity) || 0;
+    return price * quantity;
+  }, [item.price, item.quantity]);
 
   return (
     <div className="cart-item">
-      <div className="cart-item-image">
+      <div className="cart-item-image" onClick={handleProductClick} style={{ cursor: 'pointer' }}>
         <img 
-          src={item.image_urls && item.image_urls.length > 0 ? item.image_urls[0] : '/placeholder-image.jpg'} 
-          alt={item.name}
+          src={item.image_urls?.[0] || item.image_url || '/placeholder-image.jpg'} 
+          alt={item.name || 'Product'}
           onError={handleImageError}
         />
         <div className="item-number">{index + 1}</div>
@@ -39,7 +49,14 @@ const CartItem = React.memo(({ item, index, onUpdateQuantity, onRemove }) => {
       
       <div className="cart-item-details">
         <div className="item-main-info">
-          <h3 className="cart-item-name">{item.name}</h3>
+          <h3 
+            className="cart-item-name clickable-product-name" 
+            onClick={handleProductClick}
+            style={{ cursor: 'pointer', color: '#007bff' }}
+            title="Click to view product details"
+          >
+            {item.name}
+          </h3>
           <div className="item-tags">
             <span className="tag">Healthcare</span>
             <span className="tag">Quality Assured</span>
@@ -48,10 +65,7 @@ const CartItem = React.memo(({ item, index, onUpdateQuantity, onRemove }) => {
         
         <div className="item-pricing">
           <div className="price-info">
-            <span className="current-price">₹{item.price}</span>
-            {item.mrp && item.mrp > item.price && (
-              <span className="mrp-price">₹{item.mrp}</span>
-            )}
+            <span className="current-price">₹{item.price || 0}</span>
           </div>
           
           <div className="cart-item-quantity">
@@ -225,6 +239,10 @@ const Cart = () => {
     navigate('/checkout');
   }, [navigate]);
 
+  const handleProductClick = useCallback((productId) => {
+    navigate(`/product/${productId}`);
+  }, [navigate]);
+
   // Memoize computed values
   const itemsCount = useMemo(() => items.length, [items.length]);
   const itemsText = useMemo(() => itemsCount === 1 ? 'item' : 'items', [itemsCount]);
@@ -297,7 +315,7 @@ const Cart = () => {
                 index={index}
                 onUpdateQuantity={handleUpdateQuantity}
                 onRemove={handleRemoveFromCart}
-
+                onProductClick={handleProductClick}
               />
             ))}
           </div>

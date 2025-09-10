@@ -1,3 +1,8 @@
+/* Global Mobile-First Responsive Styles */
+* {
+  box-sizing: border-box; /* Ensure all elements use border-box sizing */
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -5,9 +10,164 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden; /* Prevent horizontal scroll on mobile */
+  width: 100%; /* Ensure body takes full width */
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+/* Global responsive image styles */
+img {
+  max-width: 100%; /* Ensure images never overflow their containers */
+  height: auto; /* Maintain aspect ratio */
+  display: block; /* Remove inline spacing */
+}
+
+/* Global responsive container styles */
+.container, .main-container, .page-container {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden; /* Prevent horizontal overflow */
+}
+
+/* Global responsive button styles */
+button, .btn {
+  min-height: 44px; /* Touch-friendly minimum height */
+  min-width: 44px; /* Touch-friendly minimum width */
+  cursor: pointer;
+  border: none;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+/* Global responsive form input styles */
+input, textarea, select {
+  min-height: 44px; /* Touch-friendly minimum height */
+  font-size: 16px; /* Prevent zoom on iOS */
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Global responsive text styles */
+h1, h2, h3, h4, h5, h6 {
+  word-wrap: break-word; /* Prevent text overflow */
+  hyphens: auto; /* Enable hyphenation for long words */
+}
+
+p, span, div {
+  word-wrap: break-word; /* Prevent text overflow */
+  max-width: 100%; /* Ensure text doesn't overflow */
+}
+
+/* Global responsive grid and flexbox utilities */
+.responsive-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr; /* Default to single column */
+}
+
+.responsive-flex {
+  display: flex;
+  flex-wrap: wrap; /* Allow wrapping by default */
+  gap: 1rem;
+}
+
+/* Mobile-first responsive breakpoints */
+@media (min-width: 480px) {
+  .responsive-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+}
+
+@media (min-width: 768px) {
+  .responsive-grid {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  }
+  
+  .responsive-flex {
+    flex-wrap: nowrap; /* Prevent wrapping on larger screens */
+  }
+}
+
+@media (min-width: 1024px) {
+  .responsive-grid {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+}
+
+/* Global responsive spacing utilities */
+.mobile-padding {
+  padding: 1rem;
+}
+
+.mobile-margin {
+  margin: 1rem;
+}
+
+@media (min-width: 768px) {
+  .mobile-padding {
+    padding: 2rem;
+  }
+  
+  .mobile-margin {
+    margin: 2rem;
+  }
+}
+
+/* Global responsive typography */
+.mobile-text {
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+@media (min-width: 768px) {
+  .mobile-text {
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+}
+
+/* Global responsive visibility utilities */
+.mobile-only {
+  display: block;
+}
+
+.desktop-only {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .mobile-only {
+    display: none;
+  }
+  
+  .desktop-only {
+    display: block;
+  }
+}
+
+/* Global responsive overflow handling */
+.overflow-hidden {
+  overflow: hidden;
+}
+
+.overflow-x-hidden {
+  overflow-x: hidden;
+}
+
+.overflow-y-auto {
+  overflow-y: auto;
+}
+
+/* Global responsive touch targets */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

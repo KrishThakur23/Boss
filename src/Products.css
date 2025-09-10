@@ -852,51 +852,147 @@
   100% { transform: rotate(360deg); }
 }
 
-/* Responsive Design */
+/* Enhanced Mobile Responsive Design */
 @media (max-width: 768px) {
   .products-page {
-    padding: 70px 16px 32px;
+    padding: 70px 16px 32px; /* Reduced padding for mobile */
+  }
+  
+  /* Hero section mobile adjustments */
+  .products-hero {
+    padding: 60px 0; /* Reduced hero padding */
   }
   
   .products-hero h1 {
-    font-size: 2rem;
+    font-size: 2.5rem; /* Smaller heading on mobile */
+    margin-bottom: 15px;
   }
   
+  .products-hero p {
+    font-size: 1.1rem; /* Smaller text on mobile */
+    margin-bottom: 30px;
+  }
+  
+  /* Filters mobile layout */
   .products-filters {
     padding: 1.5rem;
+    margin: 1rem; /* Reduced margin */
   }
   
   .category-filters {
     justify-content: center;
+    flex-wrap: wrap; /* Allow wrapping on mobile */
+    gap: 0.5rem; /* Reduced gap */
   }
   
   .filter-summary {
     flex-direction: column;
     align-items: stretch;
+    gap: 1rem; /* Added gap between elements */
   }
   
   .active-filters {
     justify-content: center;
+    flex-wrap: wrap; /* Allow filter tags to wrap */
   }
   
+  /* Products grid mobile layout */
   .products-grid {
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* Slightly larger cards */
     gap: 1.5rem;
+    padding: 0 1rem; /* Added horizontal padding */
+  }
+  
+  /* Product cards mobile adjustments */
+  .product-card {
+    padding: 1rem; /* Reduced card padding */
+  }
+  
+  .product-card h3 {
+    font-size: 1rem; /* Smaller product titles */
+  }
+  
+  .product-card .price {
+    font-size: 1.1rem; /* Smaller price text */
+  }
+  
+  /* Search and filter controls mobile layout */
+  .search-controls {
+    flex-direction: column; /* Stack search controls vertically */
+    gap: 1rem;
+  }
+  
+  .search-input {
+    width: 100%; /* Full width on mobile */
+  }
+  
+  .view-toggle {
+    align-self: center; /* Center view toggle */
   }
 }
 
 @media (max-width: 480px) {
-  .products-grid {
-    grid-template-columns: 1fr;
+  .products-page {
+    padding: 65px 12px 24px; /* Further reduced padding for small mobile */
   }
   
+  /* Hero section small mobile adjustments */
+  .products-hero {
+    padding: 40px 0; /* Further reduced hero padding */
+  }
+  
+  .products-hero h1 {
+    font-size: 2rem; /* Even smaller heading */
+    margin-bottom: 10px;
+  }
+  
+  .products-hero p {
+    font-size: 1rem; /* Smaller text */
+    margin-bottom: 20px;
+  }
+  
+  /* Single column layout for very small screens */
+  .products-grid {
+    grid-template-columns: 1fr; /* Single column on small mobile */
+    gap: 1rem;
+    padding: 0 0.5rem; /* Minimal padding */
+  }
+  
+  /* Category filters mobile layout */
   .category-filters {
     flex-direction: column;
     align-items: center;
+    gap: 0.5rem;
   }
   
   .category-btn {
     width: 100%;
     max-width: 200px;
+    padding: 0.75rem 1rem; /* Touch-friendly padding */
+    font-size: 0.9rem; /* Smaller text */
+  }
+  
+  /* Product cards small mobile adjustments */
+  .product-card {
+    padding: 0.75rem; /* Further reduced padding */
+  }
+  
+  .product-card img {
+    height: 120px; /* Smaller product images */
+  }
+  
+  .product-card h3 {
+    font-size: 0.9rem; /* Smaller product titles */
+    line-height: 1.3;
+  }
+  
+  .product-card .price {
+    font-size: 1rem; /* Smaller price text */
+  }
+  
+  /* Button adjustments for small mobile */
+  .add-to-cart-btn {
+    padding: 0.5rem 1rem; /* Smaller button padding */
+    font-size: 0.85rem; /* Smaller button text */
   }
 }

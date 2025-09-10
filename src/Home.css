@@ -38,7 +38,7 @@ html {
 /* Main Content */
 .main-content {
   flex: 1;
-  margin-top: 80px;
+  margin-top: 0; /* Remove margin to connect with header */
 }
 
 /* Container */
@@ -48,19 +48,53 @@ html {
   padding: 0 20px;
 }
 
-/* Responsive Design */
+/* Responsive Design - Enhanced Mobile Support */
 @media (max-width: 768px) {
   .container {
     padding: 0 15px;
   }
   
   .main-content {
-    margin-top: 70px;
+    margin-top: 0; /* Remove margin on mobile too */
+  }
+  
+  /* Ensure all images are responsive */
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+  
+  /* Make buttons touch-friendly */
+  button, .btn {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0.75rem 1rem;
+  }
+  
+  /* Improve form inputs for mobile */
+  input, textarea, select {
+    min-height: 44px;
+    font-size: 16px; /* Prevent zoom on iOS */
   }
 }
 
 @media (max-width: 480px) {
   .container {
     padding: 0 10px;
+  }
+  
+  .main-content {
+    margin-top: 0; /* Remove margin on small mobile too */
+  }
+  
+  /* Smaller text on very small screens */
+  h1 { font-size: 1.75rem; }
+  h2 { font-size: 1.5rem; }
+  h3 { font-size: 1.25rem; }
+  
+  /* Adjust button sizes for small screens */
+  button, .btn {
+    padding: 0.6rem 0.8rem;
+    font-size: 0.9rem;
   }
 }
