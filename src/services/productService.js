@@ -21,20 +21,49 @@ export class ProductService {
   // Upload product image to Supabase Storage (bucket: product-images)
   static async uploadProductImage(file, folder = 'products') {
     try {
-      const fileExt = file.name.split('.').pop()
+      console.log('📤 Uploading file:', {
+        name: file.name,
+        type: file.type,
+        size: file.size
+      })
+      
+      const fileExt = file.name.split('.').pop().toLowerCase()
       const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`
+      
+      console.log('📤 Attempting upload to:', fileName)
+      
+      // Convert file to ArrayBuffer first
+      const arrayBuffer = await file.arrayBuffer()
+      const uint8Array = new Uint8Array(arrayBuffer)
+      
+      console.log('📤 File converted to Uint8Array, size:', uint8Array.length)
+      
+      // Upload using Uint8Array
       const { data, error } = await supabase.storage
         .from('product-images')
-        .upload(fileName, file, { upsert: false })
-      if (error) throw error
+        .upload(fileName, uint8Array, {
+          contentType: file.type || `image/${fileExt === 'jpg' ? 'jpeg' : fileExt}`,
+          upsert: false
+        })
+      
+      if (error) {
+        console.error('❌ Storage upload error:', error)
+        console.error('Error details:', {
+          message: error.message,
+          statusCode: error.statusCode,
+          error: error.error
+        })
+        throw error
+      }
 
       const { data: publicUrlData } = supabase.storage
         .from('product-images')
         .getPublicUrl(data.path)
 
+      console.log('✅ Upload successful:', publicUrlData.publicUrl)
       return { url: publicUrlData.publicUrl, error: null }
     } catch (error) {
-      console.error('Upload image error:', error)
+      console.error('❌ Upload image error:', error)
       return { url: null, error }
     }
   }
