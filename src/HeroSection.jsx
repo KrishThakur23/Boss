@@ -129,8 +129,41 @@ const HeroSection = forwardRef(({ currentSearchTerm }, ref) => {
     <section className="hero-section" ref={ref}>
       <div className="container">
         <div className="hero-content">
-          <h1>Search for essentials</h1>
-          <p>Find medicines, lab tests, and more</p>
+          {/* Healthcare Icon */}
+          <div className="hero-icon">
+            <svg width="80" height="80" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="50" cy="50" r="45" fill="url(#gradient1)" opacity="0.1"/>
+              <path d="M50 20L60 30H70V40L80 50L70 60V70H60L50 80L40 70H30V60L20 50L30 40V30H40L50 20Z" fill="url(#gradient1)"/>
+              <path d="M45 45H35V55H45V65H55V55H65V45H55V35H45V45Z" fill="white"/>
+              <defs>
+                <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#3B82F6"/>
+                  <stop offset="100%" stopColor="#8B5CF6"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+
+          <h1>Your Health, Our Priority</h1>
+          <p className="hero-tagline">FlickXir – Your health, delivered with care</p>
+          
+          <p className="hero-subtitle">Find medicines, lab tests, and more</p>
+
+          {/* Quick Options Strip */}
+          <div className="quick-options">
+            <div className="quick-option" onClick={() => navigate('/products?category=medicines')}>
+              <div className="quick-option-icon">💊</div>
+              <span>Medicines</span>
+            </div>
+            <div className="quick-option" aria-disabled="true" tabIndex={-1} onClick={() => {}}>
+              <div className="quick-option-icon">🌿</div>
+              <span>Wellness</span>
+            </div>
+            <div className="quick-option" aria-disabled="true" tabIndex={-1} onClick={() => {}}>
+              <div className="quick-option-icon">👨‍⚕️</div>
+              <span>Doctor Consult</span>
+            </div>
+          </div>
 
           {/* Search Bar */}
           <form onSubmit={handleSearchSubmit} className="hero-search-form">
@@ -239,10 +272,30 @@ const HeroSection = forwardRef(({ currentSearchTerm }, ref) => {
             </div>
           </form>
 
-          {/* Prescription Upload */}
+          {/* Trust Line */}
+          <div className="trust-line">
+            <span>100% Genuine Medicines | Licensed Pharmacy | Delivered Safely</span>
+          </div>
+
+          {/* Prescription Upload - More Prominent */}
           <div className="hero-prescription">
-            <span>Order with prescription.</span>
-            <Link to="/prescription-upload" className="hero-upload-link">UPLOAD NOW &gt;</Link>
+            <div className="prescription-content">
+              <div className="prescription-icon">📋</div>
+              <div className="prescription-text">
+                <span className="prescription-label">Order with prescription</span>
+                <span className="prescription-subtitle">Upload your prescription for faster delivery</span>
+              </div>
+            </div>
+            <Link to="/prescription-upload" className="hero-upload-btn">
+              <span>UPLOAD PRESCRIPTION</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14,2 14,8 20,8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+                <polyline points="10,9 9,9 8,9"/>
+              </svg>
+            </Link>
           </div>
         </div>
       </div>

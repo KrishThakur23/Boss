@@ -292,8 +292,18 @@ const ProductSections = () => {
       {productSections.map((section, sectionIndex) => (
         <section key={sectionIndex} className="product-section">
           <div className="section-header">
-            <h2 className="section-title">{section.title}</h2>
-            <a href="#" className="view-all-btn">View All</a>
+            <div className="section-title-container">
+              <h2 className="section-title">{section.title}</h2>
+              {section.title === 'Essential Medicines' && (
+                <p className="section-tagline">Everyday medicines you can't miss</p>
+              )}
+            </div>
+            <button className="view-all-btn">
+              <span>View All</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M9 18l6-6-6-6"/>
+              </svg>
+            </button>
           </div>
           <div className="product-scroll-container">
             <button 
@@ -304,7 +314,9 @@ const ProductSections = () => {
                 scrollProducts(containerRef, 'prev');
               }}
             >
-              &lsaquo;
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M15 18l-6-6 6-6"/>
+              </svg>
             </button>
             <div className="product-grid">
               {section.products.map((product, productIndex) => {
@@ -362,7 +374,9 @@ const ProductSections = () => {
                 scrollProducts(containerRef, 'next');
               }}
             >
-              &rsaquo;
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M9 18l6-6-6-6"/>
+              </svg>
             </button>
           </div>
         </section>

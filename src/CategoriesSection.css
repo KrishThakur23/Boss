@@ -1,115 +1,288 @@
 /* CategoriesSection Component Styles */
 .categories-section {
-  background: var(--white-color);
-  padding: 2rem 0;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  padding: 3rem 0;
   border-bottom: 1px solid #e5e7eb;
+  position: relative;
+}
+
+.categories-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="dots" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="1" fill="%23e2e8f0" opacity="0.3"/></pattern></defs><rect width="100" height="100" fill="url(%23dots)"/></svg>');
+  opacity: 0.5;
+  z-index: 0;
+}
+
+.categories-section .container {
+  position: relative;
+  z-index: 1;
 }
 
 .categories-section .section-header {
   text-align: center;
-  margin-bottom: 2rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  margin-bottom: 3rem;
 }
 
-
-
 .section-title {
-  font-size: 1.8rem;
-  color: var(--dark-text);
-  margin-bottom: 0;
+  font-size: 2.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #3B82F6, #8B5CF6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.5rem;
+  line-height: 1.2;
+}
+
+.section-subtitle {
+  font-size: 1.1rem;
+  color: #64748b;
+  font-weight: 500;
+  margin: 0;
 }
 
 .category-shortcuts {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 2rem;
   margin-top: 2rem;
 }
 
 .category-item {
   text-align: center;
-  padding: 1rem;
-  border-radius: 15px;
-  background: var(--white-color);
-  box-shadow: none;
-  border: 1px solid transparent;
-  transition: all 0.3s ease;
+  padding: 2rem 1.5rem;
+  border-radius: 20px;
+  background: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 2px solid transparent;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.category-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(139, 92, 246, 0.05));
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .category-item:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
-  border-color: #e5e7eb;
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 12px 40px rgba(59, 130, 246, 0.15);
+  border-color: #3B82F6;
+}
+
+.category-item:hover::before {
+  opacity: 1;
 }
 
 .category-icon {
-  font-size: 2.5rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 1rem;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.category-img {
-  width: 150px;
-  height: 100px;
+.category-icon svg {
+  transition: transform 0.3s ease;
+}
+
+.category-item:hover .category-icon svg {
+  transform: scale(1.1);
 }
 
 .category-name {
-  font-weight: 600;
-  color: var(--dark-text);
-  margin-bottom: 0.3rem;
-  font-size: 0.9rem;
+  font-weight: 700;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+  position: relative;
+  z-index: 1;
 }
 
 .category-offer {
-  font-size: 0.75rem;
-  color: var(--accent-color);
-  font-weight: bold;
+  font-size: 0.8rem;
+  color: #3B82F6;
+  font-weight: 600;
+  background: rgba(59, 130, 246, 0.1);
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  display: inline-block;
+  position: relative;
+  z-index: 1;
+}
+
+/* Diseases Grid */
+.diseases-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.disease-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 2px solid transparent;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.disease-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.03), rgba(139, 92, 246, 0.03));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.disease-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(59, 130, 246, 0.12);
+  border-color: #3B82F6;
+}
+
+.disease-card:hover::before {
+  opacity: 1;
+}
+
+.disease-icon {
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.disease-icon svg {
+  transition: transform 0.3s ease;
+}
+
+.disease-card:hover .disease-icon svg {
+  transform: scale(1.1);
+}
+
+.disease-content {
+  flex: 1;
+  position: relative;
+  z-index: 1;
+}
+
+.disease-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #374151;
+  margin-bottom: 0.25rem;
+}
+
+.disease-offer {
+  font-size: 0.8rem;
+  color: #3B82F6;
+  font-weight: 600;
+  background: rgba(59, 130, 246, 0.1);
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  display: inline-block;
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
+  .section-title {
+    font-size: 2rem;
+  }
+  
+  .section-subtitle {
+    font-size: 1rem;
+  }
+  
   .category-shortcuts {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1rem;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
   }
 
   .category-item {
-    padding: 0.8rem;
-  }
-
-  .category-icon {
-    font-size: 2rem;
+    padding: 1.5rem 1rem;
   }
 
   .category-name {
-    font-size: 0.8rem;
+    font-size: 0.9rem;
+  }
+  
+  .diseases-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .disease-card {
+    padding: 1.25rem;
+  }
+  
+  .disease-name {
+    font-size: 1rem;
   }
 }
 
 @media (max-width: 480px) {
+  .section-title {
+    font-size: 1.75rem;
+  }
+  
+  .section-subtitle {
+    font-size: 0.9rem;
+  }
+  
   .category-shortcuts {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
   }
 
-  .category-icon {
-    font-size: 1.8rem;
+  .category-item {
+    padding: 1.25rem 0.75rem;
   }
 
   .category-name {
-    font-size: 0.75rem;
+    font-size: 0.85rem;
   }
 
   .category-offer {
-    font-size: 0.7rem;
+    font-size: 0.75rem;
   }
-}
-
-/* Disease Item Specific Styles */
-.disease-item:hover {
-  border-color: #0891b2;
-  background: #f0f9ff;
+  
+  .disease-card {
+    padding: 1rem;
+    gap: 0.75rem;
+  }
+  
+  .disease-name {
+    font-size: 0.95rem;
+  }
+  
+  .disease-offer {
+    font-size: 0.75rem;
+  }
 }
 
 
