@@ -11,7 +11,7 @@ const ProductSections = () => {
   const [productSections, setProductSections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [productLoadingStates, setProductLoadingStates] = useState(new Set());
+  const [productLoadingStates, setProductLoadingStates] = useState(new Map());
   const { addToCart, updateQuantity, removeFromCart, items, operationLoading } = useCart();
   const { isAuthenticated } = useAuth();
 
@@ -103,7 +103,7 @@ const ProductSections = () => {
     }
     
     // Set loading state for this specific product
-    setProductLoadingStates(prev => new Set(prev).add(product.id));
+    setProductLoadingStates(prev => new Map(prev).set(product.id, 'adding'));
     
     try {
       await addToCart(product);
@@ -111,9 +111,9 @@ const ProductSections = () => {
       // Remove loading state after operation completes
       setTimeout(() => {
         setProductLoadingStates(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(product.id);
-          return newSet;
+          const newMap = new Map(prev);
+          newMap.delete(product.id);
+          return newMap;
         });
       }, 300); // Small delay for smooth UX
     }
@@ -123,7 +123,8 @@ const ProductSections = () => {
     const cartItem = getCartItem(productId);
     if (cartItem) {
       // Set loading state for this specific product
-      setProductLoadingStates(prev => new Set(prev).add(productId));
+      const operationType = newQuantity <= 0 ? 'removing' : 'updating';
+      setProductLoadingStates(prev => new Map(prev).set(productId, operationType));
       
       try {
         if (newQuantity <= 0) {
@@ -135,9 +136,9 @@ const ProductSections = () => {
         // Remove loading state after operation completes
         setTimeout(() => {
           setProductLoadingStates(prev => {
-            const newSet = new Set(prev);
-            newSet.delete(productId);
-            return newSet;
+            const newMap = new Map(prev);
+            newMap.delete(productId);
+            return newMap;
           });
         }, 300);
       }
@@ -145,39 +146,55 @@ const ProductSections = () => {
   }, [getCartItem, updateQuantity, removeFromCart]);
 
   // Quantity Controls Component
-  const QuantityControls = ({ product, quantity, isLoading }) => (
-    <div className="quantity-controls-card">
-      <button 
-        className="quantity-btn decrease"
-        onClick={(e) => {
-          e.stopPropagation();
-          handleUpdateQuantity(product.id, quantity - 1);
-        }}
-        aria-label="Decrease quantity"
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M5 12h14"/>
-        </svg>
-      </button>
-      
-      <div className="quantity-display">
-        <span className="quantity-number">{quantity}</span>
+  const QuantityControls = ({ product, quantity, isLoading }) => {
+    const productLoadingState = productLoadingStates.get(product.id);
+    const isUpdating = productLoadingState === 'updating';
+    const isRemoving = productLoadingState === 'removing';
+    
+    return (
+      <div className="quantity-controls-card">
+        <button 
+          className="quantity-btn decrease"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleUpdateQuantity(product.id, quantity - 1);
+          }}
+          aria-label="Decrease quantity"
+          disabled={isUpdating || isRemoving}
+        >
+          {isRemoving ? (
+            <LoadingSpinner size="sm" />
+          ) : (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M5 12h14"/>
+            </svg>
+          )}
+        </button>
+        
+        <div className="quantity-display">
+          <span className="quantity-number">{quantity}</span>
+        </div>
+        
+        <button 
+          className="quantity-btn increase"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleUpdateQuantity(product.id, quantity + 1);
+          }}
+          aria-label="Increase quantity"
+          disabled={isUpdating || isRemoving}
+        >
+          {isUpdating ? (
+            <LoadingSpinner size="sm" />
+          ) : (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 5v14M5 12h14"/>
+            </svg>
+          )}
+        </button>
       </div>
-      
-      <button 
-        className="quantity-btn increase"
-        onClick={(e) => {
-          e.stopPropagation();
-          handleUpdateQuantity(product.id, quantity + 1);
-        }}
-        aria-label="Increase quantity"
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M12 5v14M5 12h14"/>
-        </svg>
-      </button>
-    </div>
-  );
+    );
+  };
 
   const scrollProducts = (containerRef, direction) => {
     if (containerRef.current) {
@@ -215,7 +232,8 @@ const ProductSections = () => {
               const fallbackProduct = { ...product, id: `fallback-${index}` };
               const cartQuantity = getCartQuantity(fallbackProduct.id);
               const isInCart = cartQuantity > 0;
-              const isProductLoading = productLoadingStates.has(fallbackProduct.id);
+              const productLoadingState = productLoadingStates.get(fallbackProduct.id);
+              const isProductLoading = productLoadingState === 'adding';
               
               return (
                 <div 
@@ -322,7 +340,8 @@ const ProductSections = () => {
               {section.products.map((product, productIndex) => {
                 const cartQuantity = getCartQuantity(product.id);
                 const isInCart = cartQuantity > 0;
-                const isProductLoading = productLoadingStates.has(product.id);
+                const productLoadingState = productLoadingStates.get(product.id);
+                const isProductLoading = productLoadingState === 'adding';
                 
                 return (
                   <div 

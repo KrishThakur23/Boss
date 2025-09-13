@@ -416,7 +416,7 @@ const ProductDetail = () => {
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <button
                           onClick={() => handleUpdateQuantity(product.id, cartQuantity - 1)}
-                          disabled={operationLoading || cartQuantity <= 1}
+                          disabled={operationLoading.remove || operationLoading.update || cartQuantity <= 1}
                           style={{
                             backgroundColor: '#dc2626',
                             color: 'white',
@@ -441,7 +441,7 @@ const ProductDetail = () => {
                         </span>
                         <button
                           onClick={() => handleUpdateQuantity(product.id, cartQuantity + 1)}
-                          disabled={operationLoading || cartQuantity >= (product.stock_quantity || 10)}
+                          disabled={operationLoading.remove || operationLoading.update || cartQuantity >= (product.stock_quantity || 10)}
                           style={{
                             backgroundColor: '#16a34a',
                             color: 'white',
@@ -729,7 +729,7 @@ const ProductDetail = () => {
                     {recommendedProducts.slice(0, 6).map((recommendedProduct, index) => {
                       const cartQuantity = getCartQuantity(recommendedProduct.id);
                       const isInCart = cartQuantity > 0;
-                      const isProductLoading = operationLoading.add || operationLoading.update || operationLoading.remove;
+                      const isProductLoading = operationLoading.add || operationLoading.update;
                       
                       return (
                         <div

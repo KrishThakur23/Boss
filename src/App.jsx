@@ -33,6 +33,7 @@ import Checkout from './Checkout';
 import OrderSuccess from './OrderSuccess';
 import MyOrders from './MyOrders';
 import './App.css';
+import ScrollToTop from './ScrollToTop';
 
 function App() {
   return (
@@ -47,6 +48,7 @@ function App() {
           <div className="App">
             <Header />
             <main className="main-content">
+              <ScrollToTop />
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/signin" element={<SignIn />} />
@@ -76,6 +78,7 @@ function App() {
                                  <Route path="/checkout" element={<Checkout />} />
                  <Route path="/order-success" element={<OrderSuccess />} />
                  <Route path="/my-orders" element={<MyOrders />} />
+                 
                  
               </Routes>
             </main>

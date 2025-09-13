@@ -164,6 +164,8 @@ export const CartProvider = ({ children }) => {
   const { isAuthenticated, user, ensureValidSession, refreshSession } = useAuth();
   
   const [isLoadingFromSupabase, setIsLoadingFromSupabase] = useState(false);
+  const hasAttemptedLoadRef = useRef(false);
+  const realtimeChannelRef = useRef(null);
 
   // Utility function to handle JWT expiration for Supabase calls
   const withJWTRefresh = useCallback(async (apiCall, retryCount = 1) => {
@@ -295,6 +297,9 @@ export const CartProvider = ({ children }) => {
       if (profileError) {
         console.error('Error getting user profile:', profileError);
         dispatch({ type: 'SET_ERROR', payload: 'Failed to load user profile' });
+        // Avoid tight retry loops
+        loadedUserRef.current = user.id;
+        hasAttemptedLoadRef.current = true;
         return;
       }
 
@@ -310,6 +315,8 @@ export const CartProvider = ({ children }) => {
       if (cartError && cartError.code !== 'PGRST116') {
         console.error('Error loading cart:', cartError);
         dispatch({ type: 'SET_ERROR', payload: 'Failed to load cart' });
+        loadedUserRef.current = user.id;
+        hasAttemptedLoadRef.current = true;
         return;
       }
 
@@ -325,6 +332,8 @@ export const CartProvider = ({ children }) => {
         if (createError) {
           console.error('Error creating cart:', createError);
           dispatch({ type: 'SET_ERROR', payload: 'Failed to create cart' });
+          loadedUserRef.current = user.id;
+          hasAttemptedLoadRef.current = true;
           return;
         }
         cart = newCart;
@@ -341,6 +350,8 @@ export const CartProvider = ({ children }) => {
       if (itemsError) {
         console.error('Error loading cart items:', itemsError);
         dispatch({ type: 'SET_ERROR', payload: 'Failed to load cart items' });
+        loadedUserRef.current = user.id;
+        hasAttemptedLoadRef.current = true;
         return;
       }
 
@@ -349,6 +360,7 @@ export const CartProvider = ({ children }) => {
         // Keep the current cart items from localStorage
         // Don't dispatch SET_CART_ITEMS with empty array - keep current items
         loadedUserRef.current = user.id;
+        hasAttemptedLoadRef.current = true;
         return;
       }
 
@@ -377,6 +389,7 @@ export const CartProvider = ({ children }) => {
         }));
         dispatch({ type: 'SET_CART_ITEMS', payload: basicItems });
         loadedUserRef.current = user.id;
+        hasAttemptedLoadRef.current = true;
         return;
       }
 
@@ -402,10 +415,13 @@ export const CartProvider = ({ children }) => {
       
       dispatch({ type: 'SET_CART_ITEMS', payload: transformedItems });
       loadedUserRef.current = user.id;
+      hasAttemptedLoadRef.current = true;
       
     } catch (error) {
       console.error('Error loading cart from Supabase:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to sync with server' });
+      loadedUserRef.current = user?.id || null;
+      hasAttemptedLoadRef.current = true;
     } finally {
       setIsLoadingFromSupabase(false);
       setOperationLoading('sync', false);
@@ -424,16 +440,62 @@ export const CartProvider = ({ children }) => {
   useEffect(() => {
     if (!state.isInitialized) return;
 
-    if (isAuthenticated && user && !isLoadingFromSupabase && loadedUserRef.current !== user.id) {
-        loadCartFromSupabase();
+    if (isAuthenticated && user && loadedUserRef.current !== user.id && !hasAttemptedLoadRef.current) {
+      loadCartFromSupabase();
     } else if (!isAuthenticated) {
-      // If user is not authenticated, ensure loading is set to false
-      // so the app can proceed with local storage cart.
       if (state.isLoading) {
-      dispatch({ type: 'SET_LOADING', payload: false });
+        dispatch({ type: 'SET_LOADING', payload: false });
+      }
     }
+  }, [isAuthenticated, user?.id, state.isInitialized, loadCartFromSupabase]);
+
+  // Realtime subscription for cart items (optional, with cleanup)
+  useEffect(() => {
+    if (!isAuthenticated || !user) {
+      if (realtimeChannelRef.current) {
+        supabase.removeChannel(realtimeChannelRef.current);
+        realtimeChannelRef.current = null;
+      }
+      return;
     }
-  }, [isAuthenticated, user?.id, state.isInitialized, isLoadingFromSupabase, loadCartFromSupabase]);
+
+    const channel = supabase
+      .channel(`cart_items_user_${user.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'cart_items', filter: `user_id=eq.${user.id}` }, (payload) => {
+        const { eventType, new: newRow, old: oldRow } = payload;
+        if (eventType === 'INSERT') {
+          dispatch({ type: 'ADD_TO_CART', payload: {
+            id: newRow.id,
+            product_id: newRow.product_id,
+            quantity: newRow.quantity,
+            price: newRow.price || 0,
+            name: newRow.name || 'Product',
+            image_urls: [],
+            in_stock: true,
+            stock_quantity: 0,
+            requires_prescription: false
+          }});
+        } else if (eventType === 'UPDATE') {
+          dispatch({ type: 'UPDATE_QUANTITY', payload: { id: newRow.id, quantity: newRow.quantity } });
+        } else if (eventType === 'DELETE') {
+          dispatch({ type: 'REMOVE_FROM_CART', payload: oldRow.id });
+        }
+      });
+
+    realtimeChannelRef.current = channel;
+    channel.subscribe();
+
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+      if (realtimeChannelRef.current === channel) {
+        realtimeChannelRef.current = null;
+      }
+    };
+  }, [isAuthenticated, user?.id]);
+
+  // Public helpers for components (declared after ops to avoid TDZ)
 
   // Stable cart operation functions
   const addToCart = useCallback(async (product) => {
@@ -579,6 +641,32 @@ export const CartProvider = ({ children }) => {
     return state.items.reduce((total, item) => total + (item.price * item.quantity), 0);
   }, [state.items]);
 
+  // Public helpers for components (declare AFTER operations to avoid TDZ)
+  const fetchCart = useCallback(() => {
+    return loadCartFromSupabase();
+  }, [loadCartFromSupabase]);
+
+  const increaseQuantity = useCallback((itemId) => {
+    const item = currentItemsRef.current.find(i => i.id === itemId);
+    if (!item) return;
+    updateQuantity(itemId, (item.quantity || 1) + 1);
+  }, [updateQuantity]);
+
+  const decreaseQuantity = useCallback((itemId) => {
+    const item = currentItemsRef.current.find(i => i.id === itemId);
+    if (!item) return;
+    const next = Math.max(0, (item.quantity || 1) - 1);
+    if (next === 0) {
+      removeFromCart(itemId);
+    } else {
+      updateQuantity(itemId, next);
+    }
+  }, [updateQuantity, removeFromCart]);
+
+  const removeItem = useCallback((itemId) => {
+    return removeFromCart(itemId);
+  }, [removeFromCart]);
+
   // Memoize the context value to prevent unnecessary re-renders
   const value = useMemo(() => ({
     items: state.items,
@@ -594,7 +682,11 @@ export const CartProvider = ({ children }) => {
     getCartItemCount,
     cartTotal,
     loadCartFromSupabase,
-    refreshCart: loadCartFromSupabase
+    refreshCart: loadCartFromSupabase,
+    fetchCart,
+    increaseQuantity,
+    decreaseQuantity,
+    removeItem
   }), [
     state.items,
     state.isLoading,
@@ -608,7 +700,11 @@ export const CartProvider = ({ children }) => {
     clearCart,
     getCartItemCount,
     cartTotal,
-    loadCartFromSupabase
+    loadCartFromSupabase,
+    fetchCart,
+    increaseQuantity,
+    decreaseQuantity,
+    removeItem
   ]);
 
   return (

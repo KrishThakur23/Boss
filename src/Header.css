@@ -92,6 +92,21 @@
   margin: 0 2rem;
 }
 
+/* Mobile hamburger button (hidden on desktop) */
+.mobile-menu-btn {
+  display: none;
+  background: var(--white-color);
+  border: 1px solid #e5e7eb;
+  padding: 0.5rem;
+  border-radius: 10px;
+  cursor: pointer;
+  color: #111827;
+}
+
+.mobile-menu {
+  display: none;
+}
+
 /* Header Search Bar */
 .header-search-container {
   opacity: 0;
@@ -468,7 +483,51 @@
 
   /* Hide desktop elements on mobile */
   .user-actions {
-    display: none;
+    display: none !important;
+  }
+  
+  .header-btn.btn-user,
+  .header-btn.btn-donate,
+  .header-btn.btn-cart {
+    display: none !important;
+  }
+
+  /* Show hamburger on mobile */
+  .mobile-menu-btn {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Mobile dropdown panel */
+  .mobile-menu {
+    display: block !important;
+    margin-top: 0.5rem;
+    border-top: 1px solid #e5e7eb;
+    padding: 0.5rem 1rem 0.75rem;
+    background: #ffffff;
+  }
+
+  .mobile-menu-item {
+    display: block;
+    padding: 0.6rem 0;
+    color: #111827;
+    text-decoration: none;
+    font-weight: 600;
+    border-bottom: 1px dashed #e5e7eb;
+  }
+
+  .mobile-menu-item:last-child {
+    border-bottom: none;
+  }
+
+  .mobile-menu-item.signout {
+    background: transparent;
+    border: none;
+    color: #ef4444;
+    padding: 0.6rem 0;
+    font-weight: 700;
+    cursor: pointer;
   }
   
   .logo-section {

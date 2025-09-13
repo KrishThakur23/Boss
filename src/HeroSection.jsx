@@ -1,4 +1,5 @@
 import React, { forwardRef, useState, useEffect, useRef } from 'react';
+import { Pill, Leaf, Stethoscope } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import VoiceSearchButton from './VoiceSearchButton';
 import ProductSearchService from './services/productSearchService';
@@ -151,16 +152,16 @@ const HeroSection = forwardRef(({ currentSearchTerm }, ref) => {
 
           {/* Quick Options Strip */}
           <div className="quick-options">
-            <div className="quick-option" onClick={() => navigate('/products?category=medicines')}>
-              <div className="quick-option-icon">💊</div>
+            <div className="quick-option rounded-xl bg-white shadow-sm" onClick={() => navigate('/products?category=medicines')}>
+              <div className="quick-option-icon"><Pill size={28} /></div>
               <span>Medicines</span>
             </div>
-            <div className="quick-option" aria-disabled="true" tabIndex={-1} onClick={() => {}}>
-              <div className="quick-option-icon">🌿</div>
+            <div className="quick-option rounded-xl bg-white shadow-sm" aria-disabled="true" tabIndex={-1} onClick={() => {}}>
+              <div className="quick-option-icon"><Leaf size={28} /></div>
               <span>Wellness</span>
             </div>
-            <div className="quick-option" aria-disabled="true" tabIndex={-1} onClick={() => {}}>
-              <div className="quick-option-icon">👨‍⚕️</div>
+            <div className="quick-option rounded-xl bg-white shadow-sm" aria-disabled="true" tabIndex={-1} onClick={() => {}}>
+              <div className="quick-option-icon"><Stethoscope size={28} /></div>
               <span>Doctor Consult</span>
             </div>
           </div>

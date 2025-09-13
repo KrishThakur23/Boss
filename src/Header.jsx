@@ -14,6 +14,7 @@ const Header = forwardRef(({ isSearchActive, currentSearchTerm = 'medicines' }, 
   const ADMIN_EMAIL = 'bhalackdhebil@gmail.com'; // Change this to your email
   const isAdminUser = user?.email ? user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase() : false;
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const userMenuRef = useRef(null);
   const [displayText, setDisplayText] = useState(currentSearchTerm);
@@ -99,6 +100,7 @@ const Header = forwardRef(({ isSearchActive, currentSearchTerm = 'medicines' }, 
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
         setIsUserMenuOpen(false);
         setShowUserDropdown(false);
+        setIsMobileMenuOpen(false);
       }
     };
     if (isUserMenuOpen || showUserDropdown) {
@@ -197,6 +199,7 @@ const Header = forwardRef(({ isSearchActive, currentSearchTerm = 'medicines' }, 
           </div>
         </div>
 
+        {/* Desktop/User actions (hidden on mobile via CSS) */}
         {isAuthenticated ? (
           <div className="user-section" ref={userMenuRef}>
             <button className="header-btn btn-user" onClick={toggleUserDropdown}>
@@ -260,7 +263,44 @@ const Header = forwardRef(({ isSearchActive, currentSearchTerm = 'medicines' }, 
           </div>
           <span className="btn-text">Cart</span>
         </Link>
+
+        {/* Mobile hamburger button (shown on mobile via CSS) */}
+        <button
+          className="mobile-menu-btn"
+          aria-label="Open menu"
+          aria-expanded={isMobileMenuOpen}
+          onClick={() => setIsMobileMenuOpen((prev) => !prev)}
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
       </div>
+
+      {/* Mobile dropdown menu */}
+      {isMobileMenuOpen && (
+        <div className="mobile-menu" ref={userMenuRef}>
+          {isAuthenticated ? (
+            <>
+              <Link to="/profile" className="mobile-menu-item" onClick={() => setIsMobileMenuOpen(false)}>Profile</Link>
+              {isAdminUser && (
+                <Link to="/admin" className="mobile-menu-item" onClick={() => setIsMobileMenuOpen(false)}>Admin Dashboard</Link>
+              )}
+              <Link to="/donate" className="mobile-menu-item" onClick={() => setIsMobileMenuOpen(false)}>Donate here</Link>
+              <Link to="/cart" className="mobile-menu-item" onClick={() => setIsMobileMenuOpen(false)}>Cart ({getCartItemCount()})</Link>
+              <button className="mobile-menu-item signout" onClick={() => { setIsMobileMenuOpen(false); handleSignOut(); }}>Sign Out</button>
+            </>
+          ) : (
+            <>
+              <Link to="/signup" className="mobile-menu-item" onClick={() => setIsMobileMenuOpen(false)}>Sign up</Link>
+              <Link to="/donate" className="mobile-menu-item" onClick={() => setIsMobileMenuOpen(false)}>Donate here</Link>
+              <Link to="/cart" className="mobile-menu-item" onClick={() => setIsMobileMenuOpen(false)}>Cart ({getCartItemCount()})</Link>
+            </>
+          )}
+        </div>
+      )}
 
     </header>
   );

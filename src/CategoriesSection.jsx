@@ -1,4 +1,5 @@
 import React from 'react';
+import { Pill, Leaf, Stethoscope } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import './CategoriesSection.css';
 
@@ -188,7 +189,7 @@ const CategoriesSection = () => {
           {categories.map((category, index) => (
             <div 
               key={index} 
-              className="category-item"
+              className="category-item rounded-xl bg-white shadow-sm"
               onClick={() => {
                 if (category.name === 'Medicine') {
                   navigate('/products?category=medicines');
@@ -200,8 +201,11 @@ const CategoriesSection = () => {
               }}
               style={{ cursor: ['Doctor Consult','Wellness','Diet Plan'].includes(category.name) ? 'default' : 'pointer' }}
             >
-              <div className="category-icon">
-                {category.icon}
+              <div className="category-icon" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                {category.name === 'Medicine' && <Pill size={28} />}
+                {category.name === 'Wellness' && <Leaf size={28} />}
+                {category.name === 'Doctor Consult' && <Stethoscope size={28} />}
+                {['Healthcare','Diet Plan'].includes(category.name) && category.icon}
               </div>
               <div className="category-name">{category.name}</div>
               {category.offer && <div className="category-offer">{category.offer}</div>}
@@ -212,7 +216,7 @@ const CategoriesSection = () => {
       
       {/* Diseases Section */}
       <div className="container">
-        <div className="section-header">
+                            <div className="section-header">
           <h2 className="section-title">Health Conditions</h2>
           <p className="section-subtitle">Manage health conditions with trusted care</p>
         </div>
